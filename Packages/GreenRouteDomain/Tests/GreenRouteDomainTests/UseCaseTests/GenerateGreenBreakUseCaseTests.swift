@@ -5,6 +5,8 @@
 //  Created by Freja Egelund Grønnemose on 28/02/2026.
 //
 
+import XCTest
+@testable import GreenRouteDomain
 
 import XCTest
 @testable import GreenRouteDomain
@@ -53,12 +55,16 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
         )
 
         let reco = try XCTUnwrap(output.recommendation)
-        XCTAssertEqual(repo.saved.count, 1)
-        XCTAssertEqual(repo.saved.first, reco)
+
+        let saved = await repo.allSaved()
+        XCTAssertEqual(saved.count, 1)
+        XCTAssertEqual(saved.first, reco)
 
         XCTAssertTrue(output.didScheduleNotification)
-        XCTAssertEqual(scheduler.scheduled.count, 1)
-        XCTAssertTrue(scheduler.scheduled[0].id.contains(reco.id.uuidString))
+
+        let scheduled = await scheduler.allScheduled()
+        XCTAssertEqual(scheduled.count, 1)
+        XCTAssertTrue(scheduled[0].id.contains(reco.id.uuidString))
     }
 
     func test_execute_generatesAndSavesRecommendation_butDoesNotSchedule_whenPolicyBlocks() async throws {
@@ -104,10 +110,14 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
         )
 
         _ = try XCTUnwrap(output.recommendation)
-        XCTAssertEqual(repo.saved.count, 1)
+
+        let saved = await repo.allSaved()
+        XCTAssertEqual(saved.count, 1)
 
         XCTAssertFalse(output.didScheduleNotification)
-        XCTAssertEqual(scheduler.scheduled.count, 0)
+
+        let scheduled = await scheduler.allScheduled()
+        XCTAssertEqual(scheduled.count, 0)
     }
 }
 
@@ -120,24 +130,30 @@ private struct FakeGreenAreaProvider: GreenAreaProvider {
     }
 }
 
-private final class FakeRecommendationRepository: RecommendationRepository {
-    var saved: [Recommendation] = []
+private actor FakeRecommendationRepository: RecommendationRepository {
+    private var saved: [Recommendation] = []
 
-    func save(_ recommendation: Recommendation) throws {
+    func save(_ recommendation: Recommendation) async throws {
         saved.append(recommendation)
     }
 
-    func fetch(from start: Date, to end: Date) throws -> [Recommendation] {
+    func fetch(from start: Date, to end: Date) async throws -> [Recommendation] {
         saved.filter { $0.createdAt >= start && $0.createdAt < end }
     }
+
+    // Test helper
+    func allSaved() -> [Recommendation] { saved }
 }
 
-private final class FakeNotificationScheduler: NotificationScheduler {
-    var scheduled: [NotificationRequest] = []
+private actor FakeNotificationScheduler: NotificationScheduler {
+    private var scheduled: [NotificationRequest] = []
 
     func schedule(_ request: NotificationRequest) async throws {
         scheduled.append(request)
     }
+
+    // Test helper
+    func allScheduled() -> [NotificationRequest] { scheduled }
 }
 
 // MARK: - Helpers
