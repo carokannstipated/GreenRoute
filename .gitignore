@@ -1,0 +1,80 @@
+# =========================================
+# Xcode
+# =========================================
+
+# User-specific settings
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+
+# Xcode workspace user data
+*.xcworkspace/xcuserdata/
+
+# Derived data
+DerivedData/
+build/
+
+# SwiftPM build folder (local packages)
+.build/
+
+# =========================================
+# Swift Package Manager
+# =========================================
+
+# Ignore package resolved if you want deterministic CI builds tracked
+# (Uncomment if you want to ignore it)
+# Package.resolved
+
+# SwiftPM working directories
+.swiftpm/
+
+# =========================================
+# App Store / Archive
+# =========================================
+
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcarchive
+
+# =========================================
+# Logs
+# =========================================
+
+*.log
+
+# =========================================
+# macOS system files
+# =========================================
+
+.DS_Store
+
+# =========================================
+# Fastlane (if added later)
+# =========================================
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# =========================================
+# CocoaPods (if ever added)
+# =========================================
+
+# Pods/
+# Podfile.lock
+
+# =========================================
+# Carthage (if ever added)
+# =========================================
+
+# Carthage/Build/
+
+# =========================================
+# Temporary / Misc
+# =========================================
+
+*.swp
+*.tmp
+*.orig
