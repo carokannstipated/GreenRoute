@@ -5,22 +5,28 @@ import PackageDescription
 
 let package = Package(
     name: "GreenRouteData",
+    platforms: [
+        .iOS(.v17)
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "GreenRouteData",
-            targets: ["GreenRouteData"]
-        ),
+        .library(name: "GreenRouteData", targets: ["GreenRouteData"])
+    ],
+    dependencies: [
+        .package(path: "../GreenRouteDomain")
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "GreenRouteData"
+            name: "GreenRouteData",
+            dependencies: [
+                .product(name: "GreenRouteDomain", package: "GreenRouteDomain")
+            ]
         ),
         .testTarget(
             name: "GreenRouteDataTests",
-            dependencies: ["GreenRouteData"]
-        ),
+            dependencies: [
+                "GreenRouteData",
+                .product(name: "GreenRouteDomain", package: "GreenRouteDomain")
+            ]
+        )
     ]
 )
