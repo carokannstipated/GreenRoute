@@ -11,7 +11,9 @@ public enum GreenRouteSchema {
     public static let schema = Schema([
         InactivityEventEntity.self,
         RecommendationEntity.self,
-        LocationVisitEntity.self
-        // senere: , RecurringPatternEntity.self, RecommendationDecisionEntity.self
+        LocationVisitEntity.self,
+        GreenAreaEntity.self,
+        RecommendationDecisionEntity.self,
+        RecurringPatternEntity.self
     ])
 }

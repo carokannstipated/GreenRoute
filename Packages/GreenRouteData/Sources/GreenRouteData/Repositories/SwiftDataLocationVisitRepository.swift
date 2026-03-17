@@ -16,14 +16,15 @@ public final class SwiftDataLocationVisitRepository: LocationVisitRepository, @u
     public init(container: ModelContainer) {
         self.container = container
     }
-    public func save(_ visit: LocationVisit) async throws {
-           let context = ModelContext(container)
-           let entity = LocationVisitMapper.toEntity(visit)
-           context.insert(entity)
-           try context.save()
-       }
-
-    public func fetch(from start: Date, to end: Date) async throws -> [LocationVisit] {
+    
+    public func save(_ visit: GreenRouteDomain.LocationVisit) async throws {
+        let context = ModelContext(container)
+        let entity = LocationVisitMapper.toEntity(visit)
+        context.insert(entity)
+        try context.save()
+    }
+    
+    public func fetch(from start: Date, to end: Date) async throws -> [GreenRouteDomain.LocationVisit] {
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<LocationVisitEntity>(
             predicate: #Predicate { $0.arrival >= start && $0.arrival < end },
@@ -35,6 +36,5 @@ public final class SwiftDataLocationVisitRepository: LocationVisitRepository, @u
         let entities = try context.fetch(descriptor)
         return entities.map(LocationVisitMapper.toDomain)
     }
-    
 }
 

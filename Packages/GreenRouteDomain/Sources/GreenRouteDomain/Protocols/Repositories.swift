@@ -41,3 +41,8 @@ public protocol RecurringPatternRepository: Sendable {
     func save(_ pattern: RecurringPattern) async throws
     func fetchLatest() async throws -> RecurringPattern?
 }
+
+public protocol GreenAreaRepository: Sendable {
+    func save(_ greenArea: GreenArea) async throws
+    func fetchAll() async throws -> [GreenArea]
+}
