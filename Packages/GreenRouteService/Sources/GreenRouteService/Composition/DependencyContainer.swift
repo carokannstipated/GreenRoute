@@ -9,16 +9,29 @@ actor DependencyContainer {
     private let inactivityMonitor: InactivityMonitor
     private let locationMonitor: LocationMonitor
 
-    private init(inactivityMonitor: InactivityMonitor, locationMonitor: LocationMonitor) {
+    private init(
+        inactivityMonitor: InactivityMonitor,
+        locationMonitor: LocationMonitor
+    ) {
         self.inactivityMonitor = inactivityMonitor
         self.locationMonitor = locationMonitor
     }
+    
+    // Result type to return providers without actor isolation
+    struct Providers: Sendable {
+        let notificationScheduler: NotificationScheduler
+        let greenAreaProvider: GreenAreaProvider
+    }
 
-    static func production() -> DependencyContainer {
+    static func production() -> (container: DependencyContainer, providers: Providers) {
         // Platform clients (NOT Sendable – perfectly fine)
         let motion = CoreMotionMotionClient()
         let location = CoreLocationClient()
         let clock = SystemClock()
+
+        // Providers (Sendable - safe to share)
+        let notificationScheduler = UserNotificationScheduler()
+        let greenAreaProvider = MapKitGreenAreaProvider()
 
         final class Box: @unchecked Sendable { var container: DependencyContainer? }
         let box = Box()
@@ -53,7 +66,13 @@ actor DependencyContainer {
             locationMonitor: locationMonitor
         )
         box.container = container
-        return container
+        
+        let providers = Providers(
+            notificationScheduler: notificationScheduler,
+            greenAreaProvider: greenAreaProvider
+        )
+        
+        return (container, providers)
     }
 
     func bindEventSink(_ sink: @escaping EventSink) {

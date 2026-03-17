@@ -9,6 +9,12 @@ import Foundation
 
 public enum GreenRouteServiceFactory {
     public static func make() -> GreenRouteService {
-        GreenRouteServiceFacade(container: .production())
+        let (container, providers) = DependencyContainer.production()
+        
+        return GreenRouteServiceFacade(
+            container: container,
+            notificationScheduler: providers.notificationScheduler,
+            greenAreaProvider: providers.greenAreaProvider
+        )
     }
 }

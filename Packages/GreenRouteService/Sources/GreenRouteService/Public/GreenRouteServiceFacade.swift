@@ -6,9 +6,13 @@
 //
 
 import Foundation
+import GreenRouteDomain
 
 public protocol GreenRouteService: Sendable {
     var events: AsyncStream<ServiceEvent> { get }
+    var notificationScheduler: NotificationScheduler { get }
+    var greenAreaProvider: GreenAreaProvider { get }
+    
     func start() async
     func stop() async
 }
@@ -16,6 +20,9 @@ public protocol GreenRouteService: Sendable {
 public final class GreenRouteServiceFacade: GreenRouteService, @unchecked Sendable {
 
     private let container: DependencyContainer
+    
+    public let notificationScheduler: NotificationScheduler
+    public let greenAreaProvider: GreenAreaProvider
 
     private let stream: AsyncStream<ServiceEvent>
     private let continuation: AsyncStream<ServiceEvent>.Continuation
@@ -23,8 +30,14 @@ public final class GreenRouteServiceFacade: GreenRouteService, @unchecked Sendab
     public var events: AsyncStream<ServiceEvent> { stream }
 
     // internal init (DependencyContainer is internal)
-    init(container: DependencyContainer) {
+    init(
+        container: DependencyContainer,
+        notificationScheduler: NotificationScheduler,
+        greenAreaProvider: GreenAreaProvider
+    ) {
         self.container = container
+        self.notificationScheduler = notificationScheduler
+        self.greenAreaProvider = greenAreaProvider
 
         var localContinuation: AsyncStream<ServiceEvent>.Continuation!
         self.stream = AsyncStream { continuation in
