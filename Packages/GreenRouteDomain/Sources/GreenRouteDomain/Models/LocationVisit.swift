@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum PlaceCategory: Equatable, Hashable, Sendable {
+public enum PlaceCategory:  Equatable, Hashable, Sendable {
     case home
     case workOrStudy
     case other
