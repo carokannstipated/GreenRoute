@@ -17,7 +17,11 @@ final class CoreLocationClient: NSObject, LocationClient {
         super.init()
         manager.delegate = self
     }
-
+    
+    func requestLocation() {
+        manager.requestLocation()
+    }
+    
     func requestWhenInUsePermission() {
         manager.requestWhenInUseAuthorization()
     }

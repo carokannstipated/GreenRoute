@@ -52,6 +52,7 @@ struct GreenBreakView: View {
                     recommendation: recommendation,
                     origin: viewModel.lastKnownCoordinate
                 )
+                .presentationDragIndicator(.visible)
             }
         }
         .alert(
@@ -101,4 +102,8 @@ struct GreenBreakView: View {
             #endif
         }
     }
+}
+
+#Preview {
+    AppCompositionRoot()
 }

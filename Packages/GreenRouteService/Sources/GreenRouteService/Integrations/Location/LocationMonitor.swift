@@ -31,12 +31,15 @@ actor LocationMonitor {
 
     func start() {
         location.requestWhenInUsePermission()
+
         location.startMonitoringSignificantLocationChanges { [weak self] update in
             guard let self else { return }
             Task {
                 await self.handle(update)
             }
         }
+        location.requestLocation()
+        
     }
 
     func stop() {

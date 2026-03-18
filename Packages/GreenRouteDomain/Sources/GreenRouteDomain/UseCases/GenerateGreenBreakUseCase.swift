@@ -60,6 +60,10 @@ public struct GenerateGreenBreakUseCase: Sendable {
             radius: searchRadius
         )
 
+        #if DEBUG
+        print("🟡 fetchGreenAreas returned \(areas.count) areas near \(currentCoordinate)")
+        #endif
+
         // 2) Generate recommendation (rule-based engine)
         guard let recommendation = recommendationEngine.generateRecommendation(
             inactivity: inactivity,

@@ -28,6 +28,7 @@ public struct RecommendationEngine: Sendable {
         precondition(assumedWalkingSpeedMetersPerSecond > 0, "assumedWalkingSpeedMetersPerSecond must be > 0")
 
         let thresholdSeconds = TimeInterval(inactivityThresholdMinutes * 60)
+        /*
         guard inactivity.duration >= thresholdSeconds else { return nil }
 
         // Find nearest green area
@@ -41,6 +42,39 @@ public struct RecommendationEngine: Sendable {
         let distance = DistanceMeters(value: distanceValue)
 
         guard distance <= maxDistance else { return nil }
+         */
+        
+        #if DEBUG
+        print("🟡 inactivity duration: \(inactivity.duration), threshold: \(thresholdSeconds)")
+        #endif
+        guard inactivity.duration >= thresholdSeconds else {
+            #if DEBUG
+            print("🔴 rejected: inactivity duration too short")
+            #endif
+            return nil
+        }
+
+        guard let nearest = nearbyGreenAreas.min(by: {
+            currentCoordinate.distance(to: $0.coordinate) < currentCoordinate.distance(to: $1.coordinate)
+        }) else {
+            #if DEBUG
+            print("🔴 rejected: no nearby areas")
+            #endif
+            return nil
+        }
+
+        let distanceValue = currentCoordinate.distance(to: nearest.coordinate)
+        let distance = DistanceMeters(value: distanceValue)
+        #if DEBUG
+        print("🟡 nearest: \(nearest.name), distance: \(distanceValue), maxDistance: \(maxDistance.value)")
+        #endif
+
+        guard distance <= maxDistance else {
+            #if DEBUG
+            print("🔴 rejected: too far")
+            #endif
+            return nil
+        }
 
         // Estimate walk time (rounded to nearest minute, minimum 1 minute if distance > 0)
         let seconds = distance.value / assumedWalkingSpeedMetersPerSecond

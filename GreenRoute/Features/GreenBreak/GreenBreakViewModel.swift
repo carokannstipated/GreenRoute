@@ -37,7 +37,7 @@ final class GreenBreakViewModel {
     // MARK: - Config
 
     private let inactivityThresholdMinutes = 20
-    private let maxDistance = DistanceMeters(value: 500)
+    private let maxDistance = DistanceMeters(value: 1000) // Maybe make a setting that adjusts maxdistance
     private let searchRadius = DistanceMeters(value: 500)
 
     init(
@@ -89,13 +89,26 @@ final class GreenBreakViewModel {
     // MARK: - Demo
 
     func simulateInactivity() async {
+        #if DEBUG
+        print("🔵 simulateInactivity called, coordinate: \(String(describing: lastKnownCoordinate))")
+        #endif
+        
         let now = Date()
         let fakeEvent = InactivityEvent(
             start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
             end: now
         )
         let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
+        
+        #if DEBUG
+        print("🔵 calling generateRecommendation with \(coordinate)")
+        #endif
+
         await generateRecommendation(for: fakeEvent, at: coordinate)
+        
+        #if DEBUG
+        print("🔵 generateRecommendation finished, recommendation: \(String(describing: recommendation))")
+        #endif
     }
 
     // MARK: - Private

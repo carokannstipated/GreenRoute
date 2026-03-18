@@ -15,6 +15,7 @@ struct LocationUpdate: Sendable {
 
 protocol LocationClient {
     func requestWhenInUsePermission()
+    func requestLocation()
     func startMonitoringSignificantLocationChanges(handler: @escaping @Sendable (LocationUpdate) -> Void)
     func stopMonitoringSignificantLocationChanges()
 }
