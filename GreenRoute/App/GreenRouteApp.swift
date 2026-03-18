@@ -47,7 +47,7 @@ struct AppCompositionRoot: View {
             // Data
             let container = try ModelContainerFactory.makePersistentContainer()
             let recommendationRepository = SwiftDataRecommendationRepository(container: container)
-            // TODO: swap in SwiftDataInactivityEventRepository when colleague finishes it
+            let inactivityRepository = SwiftDataInactivityEventRepository(container: container)
 
             // Service
             let service = GreenRouteServiceFactory.make()
