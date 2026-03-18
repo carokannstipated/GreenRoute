@@ -18,14 +18,14 @@ public final class SwiftDataRecommendationDecisionRepository: RecommendationDeci
         self.container = container
     }
     
-    public func save(_ decision: RecommendationDecision) async throws {
+    public func save(_ decision: RecommendationDecision) throws {
         let context = ModelContext(container)
         let entity = RecommendationDecisionMapper.toEntity(decision)
         context.insert(entity)
         try context.save()
     }
     
-    public func fetch(for recommendationID: UUID) async throws -> [RecommendationDecision] {
+    public func fetch(for recommendationID: UUID) throws -> [RecommendationDecision] {
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<RecommendationDecisionEntity>(
             predicate: #Predicate { $0.recommendationID == recommendationID },
