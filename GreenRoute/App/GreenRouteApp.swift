@@ -28,7 +28,9 @@ struct AppCompositionRoot: View {
     var body: some View {
         Group {
             if let viewModel {
-                GreenBreakView(viewModel: viewModel)
+                NavigationStack {
+                    GreenBreakView(viewModel: viewModel)
+                }
             } else if let error = bootstrapError {
                 ContentUnavailableView(
                     "Could not start app",

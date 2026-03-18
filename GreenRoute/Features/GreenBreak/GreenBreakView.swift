@@ -66,6 +66,23 @@ struct GreenBreakView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    #if DEBUG
+                    Button {
+                        Task { await viewModel.simulateInactivity() }
+                    } label: {
+                        Label("Simulate Inactivity", systemImage: "clock.badge.exclamationmark")
+                    }
+                    #endif
+                    
+                    // future settings items go here
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+            }
+        }
     }
 
     private var background: some View {
@@ -91,6 +108,7 @@ struct GreenBreakView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
+            /*
             #if DEBUG
             Button {
                 Task { await viewModel.simulateInactivity() }
@@ -100,6 +118,7 @@ struct GreenBreakView: View {
             .buttonStyle(.bordered)
             .padding(.top, 8)
             #endif
+             */
         }
     }
 }
