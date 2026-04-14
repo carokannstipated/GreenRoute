@@ -48,6 +48,7 @@ struct GreenMeetingView: View {
                     totalDurationMinutes: (hours * 60) + minutes,
                     routeProvider: viewModel.routeProvider
                 )
+                .presentationDragIndicator(.visible)
             }
         }
         .alert(
