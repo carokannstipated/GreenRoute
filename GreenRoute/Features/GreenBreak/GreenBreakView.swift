@@ -31,30 +31,17 @@ struct GreenBreakView: View {
                 } else {
                     idleView
                 }
+                Spacer().frame(maxHeight: 90)
+                Button {
+                    /* Action 1 */
+                } label: {
+                    Label("Generate Green Route", systemImage: "")
+                        .frame(maxWidth: .infinity, maxHeight: 40)
+                        .font(.title3.bold())
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
                 Spacer()
-                HStack(spacing: 20) {
-                    Button("Generate Green Route")
-                    {
-                        /* Action 1 */
-                    }
-                    .buttonStyle(.glassProminent)
-                    .buttonSizing(.flexible)
-                    .controlSize(ControlSize.large)
-
-                       
-                    Button("Start Green Meeting")
-                    { /* Action 2 */
-                        
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .buttonSizing(.flexible)
-                    .controlSize(ControlSize.large)
-                    
-                   }
-                   .frame(maxWidth: .infinity)
-                Spacer().frame(height: 15)
-
-                                      
             }
             .padding()
         }

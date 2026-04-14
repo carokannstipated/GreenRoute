@@ -28,8 +28,28 @@ struct AppCompositionRoot: View {
     var body: some View {
         Group {
             if let viewModel {
-                NavigationStack {
-                    GreenBreakView(viewModel: viewModel)
+                TabView {
+                    NavigationStack {
+                        GreenBreakView(viewModel: viewModel)
+                    }.tabItem {
+                        Label("Home", systemImage: "leaf.fill")
+                    }
+                    
+                    NavigationStack {
+                            GreenMeetingView()
+                        }
+                        .tabItem {
+                            Label("Green Meeting", systemImage: "figure.walk")
+                        }
+                    
+                    NavigationStack {
+                            Text("Settings") // replace with SettingsView later
+                    }
+                    .tabItem {
+                        Label("Settings", systemImage: "gearshape")
+                    }
+                    
+                    
                 }
             } else if let error = bootstrapError {
                 ContentUnavailableView(
