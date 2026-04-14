@@ -42,7 +42,6 @@ struct GreenBreakView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
-                    Spacer()
                 }
               Spacer()
             }
