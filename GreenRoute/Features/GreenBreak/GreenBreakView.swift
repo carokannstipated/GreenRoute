@@ -30,18 +30,21 @@ struct GreenBreakView: View {
                     )
                 } else {
                     idleView
+                    
+                    Spacer().frame(maxHeight: 90)
+
+                    Button {
+                        /* Action 1 */
+                    } label: {
+                        Label("Generate Green Route", systemImage: "")
+                            .frame(maxWidth: .infinity, maxHeight: 40)
+                            .font(.title3.bold())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    Spacer()
                 }
-                Spacer().frame(maxHeight: 90)
-                Button {
-                    /* Action 1 */
-                } label: {
-                    Label("Generate Green Route", systemImage: "")
-                        .frame(maxWidth: .infinity, maxHeight: 40)
-                        .font(.title3.bold())
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                Spacer()
+              Spacer()
             }
             .padding()
         }
