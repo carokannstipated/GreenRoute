@@ -37,7 +37,7 @@ struct GreenMeetingView: View {
     
     private var picker: some View {
         HStack(spacing: 0) {
-            Text("hours")
+            Text("hrs")
                 .font(.body.bold())
                 .frame(width: 50, alignment: .trailing)
             
