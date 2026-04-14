@@ -145,7 +145,3 @@ struct GreenBreakView: View {
         }
     }
 }
-
-#Preview {
-    AppCompositionRoot()
-}
