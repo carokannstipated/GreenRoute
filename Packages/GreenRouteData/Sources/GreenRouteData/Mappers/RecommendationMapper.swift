@@ -47,6 +47,7 @@ enum RecommendationMapper {
 
     private static func triggerRaw(_ trigger: Recommendation.Trigger) -> String {
         switch trigger {
+        case .userRequested: return "userRequested"
         case .inactivity: return "inactivity"
         case .pattern: return "pattern"
         }

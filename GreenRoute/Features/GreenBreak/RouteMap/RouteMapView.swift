@@ -1,11 +1,3 @@
-//
-//  RouteMapView.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
-
-
 import SwiftUI
 import MapKit
 import GreenRouteDomain
@@ -14,12 +6,20 @@ struct RouteMapView: View {
 
     @State private var viewModel: RouteMapViewModel
     @State private var position: MapCameraPosition
+    @State private var isNavigating = false
     @Environment(\.dismiss) private var dismiss
 
-    init(recommendation: Recommendation, origin: Coordinate?) {
-        let vm = RouteMapViewModel(recommendation: recommendation, origin: origin)
+    init(recommendation: Recommendation, origin: Coordinate?, routeProvider: any RouteProvider) {
+        let vm = RouteMapViewModel(recommendation: recommendation, origin: origin, routeProvider: routeProvider)
         _viewModel = State(initialValue: vm)
-        _position = State(initialValue: .region(vm.initialRegion))
+        _position = State(initialValue: .region(MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: recommendation.target.coordinate.latitude,
+                longitude: recommendation.target.coordinate.longitude
+            ),
+            latitudinalMeters: 1500,
+            longitudinalMeters: 1500
+        )))
     }
 
     var body: some View {
@@ -30,27 +30,29 @@ struct RouteMapView: View {
                 Marker(
                     viewModel.recommendation.target.name,
                     systemImage: "leaf.fill",
-                    coordinate: viewModel.destinationCoordinate
+                    coordinate: CLLocationCoordinate2D(
+                        latitude: viewModel.destinationCoordinate.latitude,
+                        longitude: viewModel.destinationCoordinate.longitude
+                    )
                 )
                 .tint(.green)
 
-                if let route = viewModel.route {
-                    MapPolyline(route)
-                        .stroke(.green, lineWidth: 5)
+                if let result = viewModel.outboundResult {
+                    MapPolyline(coordinates: result.coordinates.map {
+                        CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+                    })
+                    .stroke(.green, lineWidth: 5)
                 }
             }
-            .mapControls {
-                MapCompass()
-                MapUserLocationButton()
-            }
+            .mapControls { MapCompass(); MapUserLocationButton() }
             .ignoresSafeArea(edges: .top)
-            .onChange(of: viewModel.route) { _, route in
-                guard let route else { return }
-                let rect = route.polyline.boundingMapRect
-                let padded = rect.insetBy(
-                    dx: -rect.size.width * 0.25,
-                    dy: -rect.size.height * 0.25
-                )
+            .onChange(of: viewModel.outboundResult) { _, result in
+                guard !isNavigating else { return }
+                guard let coords = result?.coordinates, !coords.isEmpty else { return }
+                let clCoords = coords.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+                let polyline = MKPolyline(coordinates: clCoords, count: clCoords.count)
+                let rect = polyline.boundingMapRect
+                let padded = rect.insetBy(dx: -rect.size.width * 0.25, dy: -rect.size.height * 0.25)
                 withAnimation { position = .rect(padded) }
             }
 
@@ -78,12 +80,29 @@ struct RouteMapView: View {
                 }
                 Spacer()
                 Button {
-                    viewModel.openInMaps()
+                    isNavigating.toggle()
+                    withAnimation {
+                        if isNavigating {
+                            position = .userLocation(followsHeading: true, fallback: .automatic)
+                        } else {
+                            guard let coords = viewModel.outboundResult?.coordinates,
+                                  !coords.isEmpty else { return }
+                            let clCoords = coords.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+                            let polyline = MKPolyline(coordinates: clCoords, count: clCoords.count)
+                            let rect = polyline.boundingMapRect
+                            let padded = rect.insetBy(dx: -rect.size.width * 0.25, dy: -rect.size.height * 0.25)
+                            position = .rect(padded)
+                        }
+                    }
                 } label: {
-                    Label("Open in Maps", systemImage: "map")
+                    Label(
+                        isNavigating ? "Stop" : "Start walk",
+                        systemImage: isNavigating ? "stop.circle" : "figure.walk.circle.fill"
+                    )
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.green)
+                .tint(isNavigating ? .red : .green)
+                .disabled(viewModel.outboundResult == nil)
             }
 
             if let error = viewModel.routeError {

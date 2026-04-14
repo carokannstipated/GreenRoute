@@ -6,80 +6,50 @@
 //
 
 import Foundation
-import MapKit
 import GreenRouteDomain
 
 @MainActor
 @Observable
 final class RouteMapViewModel {
 
-    var route: MKRoute?
+    var outboundResult: RouteResult?
     var isLoadingRoute = false
     var routeError: String?
 
     let recommendation: Recommendation
     private let origin: Coordinate?
+    private let routeProvider: any RouteProvider
 
-    var destinationCoordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(
-            latitude: recommendation.target.coordinate.latitude,
-            longitude: recommendation.target.coordinate.longitude
-        )
+    var destinationCoordinate: Coordinate {
+        recommendation.target.coordinate
     }
 
-    var initialRegion: MKCoordinateRegion {
-        MKCoordinateRegion(
-            center: destinationCoordinate,
-            latitudinalMeters: 1500,
-            longitudinalMeters: 1500
-        )
+    var initialRegion: (center: Coordinate, meters: Double) {
+        (recommendation.target.coordinate, 1500)
     }
 
-    init(recommendation: Recommendation, origin: Coordinate?) {
+    init(recommendation: Recommendation, origin: Coordinate?, routeProvider: any RouteProvider) {
         self.recommendation = recommendation
         self.origin = origin
+        self.routeProvider = routeProvider
     }
 
     func loadRoute() async {
         isLoadingRoute = true
         defer { isLoadingRoute = false }
 
-        let request = MKDirections.Request()
-        request.transportType = .walking
-
-        if let origin {
-            let originLocation = CLLocation(
-                latitude: origin.latitude,
-                longitude: origin.longitude
-            )
-            request.source = MKMapItem(location: originLocation, address: nil)
-        } else {
-            request.source = .forCurrentLocation()
-        }
-
-        let destinationLocation = CLLocation(
-            latitude: destinationCoordinate.latitude,
-            longitude: destinationCoordinate.longitude
-        )
-        request.destination = MKMapItem(location: destinationLocation, address: nil)
-
+        let from = origin ?? recommendation.target.coordinate
         do {
-            let response = try await MKDirections(request: request).calculate()
-            route = response.routes.first
+            outboundResult = try await routeProvider.calculateRoute(
+                from: from,
+                to: recommendation.target.coordinate
+            )
         } catch {
             routeError = "Could not calculate route."
         }
     }
 
     func openInMaps() {
-        let location = CLLocation(
-            latitude: destinationCoordinate.latitude,
-            longitude: destinationCoordinate.longitude
-        )
-        let item = MKMapItem(location: location, address: nil)
-        item.name = recommendation.target.name
-        item.openInMaps(launchOptions: [
-            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
-        ])
+        // Passed to View which handles MapKit
     }
 }

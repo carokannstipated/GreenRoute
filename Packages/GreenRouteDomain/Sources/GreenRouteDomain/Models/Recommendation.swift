@@ -12,6 +12,7 @@ public struct Recommendation: Equatable, Hashable, Sendable, Identifiable {
     public enum Trigger: Equatable, Hashable, Sendable {
         case inactivity
         case pattern
+        case userRequested
     }
     
     public let id: UUID

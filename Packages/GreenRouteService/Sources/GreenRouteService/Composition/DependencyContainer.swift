@@ -16,22 +16,21 @@ actor DependencyContainer {
         self.inactivityMonitor = inactivityMonitor
         self.locationMonitor = locationMonitor
     }
-    
-    // Result type to return providers without actor isolation
+
     struct Providers: Sendable {
         let notificationScheduler: NotificationScheduler
         let greenAreaProvider: GreenAreaProvider
+        let routeProvider: RouteProvider
     }
 
     static func production() -> (container: DependencyContainer, providers: Providers) {
-        // Platform clients (NOT Sendable – perfectly fine)
         let motion = CoreMotionMotionClient()
         let location = CoreLocationClient()
         let clock = SystemClock()
 
-        // Providers (Sendable - safe to share)
         let notificationScheduler = UserNotificationScheduler()
         let greenAreaProvider = MapKitGreenAreaProvider()
+        let routeProvider = MKRouteProvider()
 
         final class Box: @unchecked Sendable { var container: DependencyContainer? }
         let box = Box()
@@ -41,7 +40,6 @@ actor DependencyContainer {
             clock: clock,
             config: .init(inactivityThreshold: 20 * 60),
             emit: { @Sendable event in
-                // Called from CoreMotion queue - safely call into actor
                 guard let container = box.container else { return }
                 Task {
                     await container.emit(event)
@@ -53,7 +51,6 @@ actor DependencyContainer {
             location: location,
             clock: clock,
             emit: { @Sendable event in
-                // Called from CoreLocation queue - safely call into actor
                 guard let container = box.container else { return }
                 Task {
                     await container.emit(event)
@@ -66,12 +63,13 @@ actor DependencyContainer {
             locationMonitor: locationMonitor
         )
         box.container = container
-        
+
         let providers = Providers(
             notificationScheduler: notificationScheduler,
-            greenAreaProvider: greenAreaProvider
+            greenAreaProvider: greenAreaProvider,
+            routeProvider: routeProvider
         )
-        
+
         return (container, providers)
     }
 
@@ -97,4 +95,3 @@ actor DependencyContainer {
         await self.locationMonitor.stop()
     }
 }
-

@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "GreenRouteService",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v26)
     ],
     products: [
         .library(
