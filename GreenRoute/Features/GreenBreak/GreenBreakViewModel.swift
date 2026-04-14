@@ -1,11 +1,3 @@
-//
-//  GreenBreakViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
-
-
 import Foundation
 import UserNotifications
 import GreenRouteDomain
@@ -32,21 +24,24 @@ final class GreenBreakViewModel {
 
     private let service: any GreenRouteService
     private let useCase: GenerateGreenBreakUseCase
+    private let recordUseCase: RecordInactivityEventUseCase
     private let policy: NotificationPolicy
 
     // MARK: - Config
 
     private let inactivityThresholdMinutes = 20
-    private let maxDistance = DistanceMeters(value: 1000) // Maybe make a setting that adjusts maxdistance
+    private let maxDistance = DistanceMeters(value: 1000)
     private let searchRadius = DistanceMeters(value: 500)
 
     init(
         service: any GreenRouteService,
         useCase: GenerateGreenBreakUseCase,
+        recordUseCase: RecordInactivityEventUseCase,
         policy: NotificationPolicy = NotificationPolicy()
     ) {
         self.service = service
         self.useCase = useCase
+        self.recordUseCase = recordUseCase
         self.policy = policy
     }
 
@@ -92,20 +87,20 @@ final class GreenBreakViewModel {
         #if DEBUG
         print("🔵 simulateInactivity called, coordinate: \(String(describing: lastKnownCoordinate))")
         #endif
-        
+
         let now = Date()
         let fakeEvent = InactivityEvent(
             start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
             end: now
         )
         let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
-        
+
         #if DEBUG
         print("🔵 calling generateRecommendation with \(coordinate)")
         #endif
 
         await generateRecommendation(for: fakeEvent, at: coordinate)
-        
+
         #if DEBUG
         print("🔵 generateRecommendation finished, recommendation: \(String(describing: recommendation))")
         #endif
@@ -116,6 +111,7 @@ final class GreenBreakViewModel {
     private func handle(_ event: ServiceEvent) async {
         switch event {
         case .inactivityDetected(let inactivity):
+            try? await recordUseCase.execute(inactivity)
             guard let coordinate = lastKnownCoordinate else { return }
             await generateRecommendation(for: inactivity, at: coordinate)
         case .significantLocationChange(let lat, let lon):
