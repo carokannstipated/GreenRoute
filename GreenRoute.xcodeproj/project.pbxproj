@@ -421,6 +421,7 @@
 				DEVELOPMENT_TEAM = JX5A77F37B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Green​Route uses your location to suggest green breaks even when the app is in the background.\nGreen​Route uses your location to suggest green breaks even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GreenRoute uses your location to find green areas nearby";
 				INFOPLIST_KEY_NSMotionUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -455,6 +456,7 @@
 				DEVELOPMENT_TEAM = JX5A77F37B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Green​Route uses your location to suggest green breaks even when the app is in the background.\nGreen​Route uses your location to suggest green breaks even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GreenRoute uses your location to find green areas nearby";
 				INFOPLIST_KEY_NSMotionUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

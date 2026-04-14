@@ -23,7 +23,7 @@ final class CoreLocationClient: NSObject, LocationClient {
     }
     
     func requestWhenInUsePermission() {
-        manager.requestWhenInUseAuthorization()
+        manager.requestAlwaysAuthorization()
     }
 
     func startMonitoringSignificantLocationChanges(handler: @escaping @Sendable (LocationUpdate) -> Void) {

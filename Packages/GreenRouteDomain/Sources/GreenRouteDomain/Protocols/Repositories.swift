@@ -46,3 +46,10 @@ public protocol GreenAreaRepository: Sendable {
     func save(_ greenArea: GreenArea) async throws
     func fetchAll() async throws -> [GreenArea]
 }
+
+// MARK: - Settings
+
+public protocol SettingsRepository: Sendable {
+    func load() -> AppSettings
+    func save(_ settings: AppSettings)
+}

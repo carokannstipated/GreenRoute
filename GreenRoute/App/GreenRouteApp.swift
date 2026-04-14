@@ -23,6 +23,7 @@ struct GreenRouteApp: App {
 struct AppCompositionRoot: View {
 
     @State private var viewModel: GreenBreakViewModel?
+    @State private var settingsRepository: SettingsRepository?
     @State private var bootstrapError: String?
 
     var body: some View {
@@ -43,7 +44,7 @@ struct AppCompositionRoot: View {
                         }
                     
                     NavigationStack {
-                            Text("Settings") // replace with SettingsView later
+                        SettingsView(settingsRepository: settingsRepository!)
                     }
                     .tabItem {
                         Label("Settings", systemImage: "gearshape")
@@ -70,6 +71,7 @@ struct AppCompositionRoot: View {
             let container = try ModelContainerFactory.makePersistentContainer()
             let recommendationRepository = SwiftDataRecommendationRepository(container: container)
             let inactivityRepository = SwiftDataInactivityEventRepository(container: container)
+            let settingsRepo = UserDefaultsSettingsRepository()
 
             // Service
             let service = GreenRouteServiceFactory.make()
@@ -83,6 +85,7 @@ struct AppCompositionRoot: View {
                 notificationScheduler: service.notificationScheduler
             )
 
+            settingsRepository = settingsRepo
             viewModel = GreenBreakViewModel(service: service, useCase: useCase)
         } catch {
             bootstrapError = error.localizedDescription
