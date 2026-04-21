@@ -1,11 +1,3 @@
-//
-//  GreenBreakView.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
-
-
 import SwiftUI
 import GreenRouteDomain
 
@@ -30,29 +22,25 @@ struct GreenBreakView: View {
                     )
                 } else {
                     idleView
-                    
                     Spacer().frame(maxHeight: 90)
-
                     Button {
-                        /* Action 1 */
+                        Task { await viewModel.generateOnDemand() }
                     } label: {
-                        Label("Generate Green Route", systemImage: "")
+                        Label("Generate Green Route", systemImage: "leaf.arrow.circlepath")
                             .frame(maxWidth: .infinity, maxHeight: 40)
                             .font(.title3.bold())
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
                 }
-              Spacer()
+                Spacer()
             }
             .padding()
         }
         .task {
             await viewModel.start()
-            // Keep the task alive until cancelled (when view disappears)
             do {
-                // Sleep for a very long time - will be cancelled when view disappears
-                try await Task.sleep(for: .seconds(86400 * 365 * 100)) // 100 years
+                try await Task.sleep(for: .seconds(86400 * 365 * 100))
             } catch {
                 // Task was cancelled
             }
@@ -62,7 +50,8 @@ struct GreenBreakView: View {
             if let recommendation = viewModel.recommendation {
                 RouteMapView(
                     recommendation: recommendation,
-                    origin: viewModel.lastKnownCoordinate
+                    origin: viewModel.lastKnownCoordinate,
+                    routeProvider: viewModel.routeProvider
                 )
                 .presentationDragIndicator(.visible)
             }
@@ -88,8 +77,6 @@ struct GreenBreakView: View {
                         Label("Simulate Inactivity", systemImage: "clock.badge.exclamationmark")
                     }
                     #endif
-                    
-                    // future settings items go here
                 } label: {
                     Image(systemName: "gearshape")
                 }
@@ -119,22 +106,6 @@ struct GreenBreakView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-
-            /*
-            #if DEBUG
-            Button {
-                Task { await viewModel.simulateInactivity() }
-            } label: {
-                Label("Simulate Inactivity", systemImage: "clock.badge.exclamationmark")
-            }
-            .buttonStyle(.bordered)
-            .padding(.top, 8)
-            #endif
-             */
         }
     }
-}
-
-#Preview {
-    AppCompositionRoot()
 }

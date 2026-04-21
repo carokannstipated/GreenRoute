@@ -10,34 +10,37 @@ import GreenRouteDomain
 
 public protocol GreenRouteService: Sendable {
     var events: AsyncStream<ServiceEvent> { get }
-    var notificationScheduler: NotificationScheduler { get }
-    var greenAreaProvider: GreenAreaProvider { get }
-    
+    var greenAreaProvider: any GreenAreaProvider { get }
+    var notificationScheduler: any NotificationScheduler { get }
+    var routeProvider: any RouteProvider { get }
     func start() async
     func stop() async
 }
 
+
 public final class GreenRouteServiceFacade: GreenRouteService, @unchecked Sendable {
 
     private let container: DependencyContainer
-    
-    public let notificationScheduler: NotificationScheduler
-    public let greenAreaProvider: GreenAreaProvider
+
+    public let notificationScheduler: any NotificationScheduler
+    public let greenAreaProvider: any GreenAreaProvider
+    public let routeProvider: any RouteProvider
 
     private let stream: AsyncStream<ServiceEvent>
     private let continuation: AsyncStream<ServiceEvent>.Continuation
 
     public var events: AsyncStream<ServiceEvent> { stream }
 
-    // internal init (DependencyContainer is internal)
     init(
         container: DependencyContainer,
-        notificationScheduler: NotificationScheduler,
-        greenAreaProvider: GreenAreaProvider
+        notificationScheduler: any NotificationScheduler,
+        greenAreaProvider: any GreenAreaProvider,
+        routeProvider: any RouteProvider
     ) {
         self.container = container
         self.notificationScheduler = notificationScheduler
         self.greenAreaProvider = greenAreaProvider
+        self.routeProvider = routeProvider
 
         var localContinuation: AsyncStream<ServiceEvent>.Continuation!
         self.stream = AsyncStream { continuation in
@@ -45,7 +48,6 @@ public final class GreenRouteServiceFacade: GreenRouteService, @unchecked Sendab
         }
         self.continuation = localContinuation
 
-        // Important: do NOT capture `self` in the sink closure (Swift 6 sendability).
         let continuation = self.continuation
         Task {
             await container.bindEventSink { event in
@@ -62,5 +64,4 @@ public final class GreenRouteServiceFacade: GreenRouteService, @unchecked Sendab
         continuation.finish()
         await container.stop()
     }
-
 }

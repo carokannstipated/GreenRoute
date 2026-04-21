@@ -17,6 +17,22 @@ public protocol GreenAreaProvider: Sendable {
     ) async throws -> [GreenArea]
 }
 
+// MARK: - Route calculation (routing engine abstraction)
+
+public struct RouteResult: Sendable, Equatable {
+    public let coordinates: [Coordinate]
+    public let expectedTravelTimeSeconds: TimeInterval
+
+    public init(coordinates: [Coordinate], expectedTravelTimeSeconds: TimeInterval) {
+        self.coordinates = coordinates
+        self.expectedTravelTimeSeconds = expectedTravelTimeSeconds
+    }
+}
+
+public protocol RouteProvider: Sendable {
+    func calculateRoute(from: Coordinate, to: Coordinate) async throws -> RouteResult
+}
+
 // MARK: - Notifications (abstraction over UNUserNotificationCenter)
 
 public struct NotificationRequest: Equatable, Hashable, Sendable {

@@ -24,11 +24,7 @@ final class UserNotificationScheduler: NotificationScheduler, Sendable {
         content.body = request.body
         content.sound = .default
 
-        let components = Calendar.current.dateComponents(
-            [.year, .month, .day, .hour, .minute, .second],
-            from: request.fireAt
-        )
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
 
         let unRequest = UNNotificationRequest(
             identifier: request.id,

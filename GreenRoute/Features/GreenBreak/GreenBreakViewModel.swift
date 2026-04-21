@@ -1,11 +1,3 @@
-//
-//  GreenBreakViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
-
-
 import Foundation
 import UserNotifications
 import GreenRouteDomain
@@ -23,7 +15,7 @@ final class GreenBreakViewModel {
 
     // MARK: - Internal state
 
-    private(set) var lastKnownCoordinate: Coordinate?
+    var lastKnownCoordinate: Coordinate? { locationStore.lastKnownCoordinate }
     private var sentCountToday = 0
     private var lastNotificationSentAt: Date?
     private var observationTask: Task<Void, Never>?
@@ -32,22 +24,30 @@ final class GreenBreakViewModel {
 
     private let service: any GreenRouteService
     private let useCase: GenerateGreenBreakUseCase
+    private let recordUseCase: RecordInactivityEventUseCase
+    private let locationStore: LocationStore
     private let policy: NotificationPolicy
+    private(set) var routeProvider: any RouteProvider
 
     // MARK: - Config
 
     private let inactivityThresholdMinutes = 20
-    private let maxDistance = DistanceMeters(value: 1000) // Maybe make a setting that adjusts maxdistance
+    private let maxDistance = DistanceMeters(value: 1000)
     private let searchRadius = DistanceMeters(value: 500)
 
     init(
         service: any GreenRouteService,
         useCase: GenerateGreenBreakUseCase,
+        recordUseCase: RecordInactivityEventUseCase,
+        locationStore: LocationStore,
         policy: NotificationPolicy = NotificationPolicy()
     ) {
         self.service = service
         self.useCase = useCase
+        self.recordUseCase = recordUseCase
+        self.locationStore = locationStore
         self.policy = policy
+        self.routeProvider = service.routeProvider
     }
 
     // MARK: - Lifecycle
@@ -92,23 +92,54 @@ final class GreenBreakViewModel {
         #if DEBUG
         print("🔵 simulateInactivity called, coordinate: \(String(describing: lastKnownCoordinate))")
         #endif
-        
+
         let now = Date()
         let fakeEvent = InactivityEvent(
             start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
             end: now
         )
         let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
-        
+
         #if DEBUG
         print("🔵 calling generateRecommendation with \(coordinate)")
         #endif
 
         await generateRecommendation(for: fakeEvent, at: coordinate)
-        
+
         #if DEBUG
         print("🔵 generateRecommendation finished, recommendation: \(String(describing: recommendation))")
         #endif
+    }
+    
+    func generateOnDemand() async {
+        let now = Date()
+        let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
+
+        // Lav et minimalt InactivityEvent der altid opfylder threshold
+        let fakeEvent = InactivityEvent(
+            start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
+            end: now
+        )
+
+        do {
+            let output = try await useCase.execute(
+                inactivity: fakeEvent,
+                currentCoordinate: coordinate,
+                inactivityThresholdMinutes: inactivityThresholdMinutes,
+                maxDistance: maxDistance,
+                searchRadius: searchRadius,
+                sentCountToday: sentCountToday,
+                lastNotificationSentAt: lastNotificationSentAt,
+                shouldScheduleNotification: false, // ingen notification når brugeren selv vælger det
+                now: now
+            )
+
+            if let reco = output.recommendation {
+                recommendation = reco
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     // MARK: - Private
@@ -116,10 +147,11 @@ final class GreenBreakViewModel {
     private func handle(_ event: ServiceEvent) async {
         switch event {
         case .inactivityDetected(let inactivity):
+            try? await recordUseCase.execute(inactivity)
             guard let coordinate = lastKnownCoordinate else { return }
             await generateRecommendation(for: inactivity, at: coordinate)
         case .significantLocationChange(let lat, let lon):
-            lastKnownCoordinate = Coordinate(latitude: lat, longitude: lon)
+            locationStore.lastKnownCoordinate = Coordinate(latitude: lat, longitude: lon)
         case .locationVisit:
             break
         }
