@@ -13,11 +13,12 @@ struct AppCompositionRoot: View {
 
     @State private var greenBreakViewModel: GreenBreakViewModel?
     @State private var greenMeetingViewModel: GreenMeetingViewModel?
+    @State private var settingsViewModel: SettingsViewModel?
     @State private var bootstrapError: String?
 
     var body: some View {
         Group {
-            if let greenBreakViewModel, let greenMeetingViewModel {
+            if let greenBreakViewModel, let greenMeetingViewModel, let settingsViewModel {
                 TabView {
                     NavigationStack {
                         GreenBreakView(viewModel: greenBreakViewModel)
@@ -30,7 +31,7 @@ struct AppCompositionRoot: View {
                     .tabItem { Label("Green Meeting", systemImage: "figure.walk") }
 
                     NavigationStack {
-                        Text("Settings")
+                        SettingsView(viewModel: settingsViewModel)
                     }
                     .tabItem { Label("Settings", systemImage: "gearshape") }
                 }
@@ -84,6 +85,7 @@ struct AppCompositionRoot: View {
                 routeProvider: service.routeProvider,
                 locationStore: locationStore
             )
+            settingsViewModel = SettingsViewModel(repository: UserDefaultsSettingsRepository())
         } catch {
             bootstrapError = error.localizedDescription
         }

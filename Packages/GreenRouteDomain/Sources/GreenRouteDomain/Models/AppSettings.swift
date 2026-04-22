@@ -2,6 +2,8 @@
 //  AppSettings.swift
 //  GreenRouteDomain
 //
+//  Created by David Rivera on 14/04/2026.
+//
 
 import Foundation
 

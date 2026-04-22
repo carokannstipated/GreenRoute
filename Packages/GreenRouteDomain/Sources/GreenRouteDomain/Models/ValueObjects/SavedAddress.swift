@@ -2,10 +2,12 @@
 //  SavedAddress.swift
 //  GreenRouteDomain
 //
+//  Created by David Rivera on 14/04/2026.
+//
 
 import Foundation
 
-public struct SavedAddress: Equatable, Hashable, Sendable {
+public struct SavedAddress: Equatable, Hashable, Sendable, Codable {
     public let displayName: String
     public let coordinate: Coordinate
 

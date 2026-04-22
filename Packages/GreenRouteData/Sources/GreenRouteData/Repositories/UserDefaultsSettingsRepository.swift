@@ -1,7 +1,8 @@
 //
 //  UserDefaultsSettingsRepository.swift
 //  GreenRouteData
-// Created by David Rivera on 14/04/2026.
+//
+//  Created by David Rivera on 14/04/2026.
 //
 
 import Foundation
@@ -23,7 +24,15 @@ public final class UserDefaultsSettingsRepository: SettingsRepository, @unchecke
             settings.maxRouteDurationMinutes = value
         }
 
-        // Load new settings here as they are added to AppSettings
+        if let data = defaults.data(forKey: key("homeAddress")),
+           let address = try? JSONDecoder().decode(SavedAddress.self, from: data) {
+            settings.homeAddress = address
+        }
+
+        if let data = defaults.data(forKey: key("workAddress")),
+           let address = try? JSONDecoder().decode(SavedAddress.self, from: data) {
+            settings.workAddress = address
+        }
 
         return settings
     }
@@ -31,7 +40,17 @@ public final class UserDefaultsSettingsRepository: SettingsRepository, @unchecke
     public func save(_ settings: AppSettings) {
         defaults.set(settings.maxRouteDurationMinutes, forKey: key("maxRouteDurationMinutes"))
 
-        // Save new settings here as they are added to AppSettings
+        if let data = try? JSONEncoder().encode(settings.homeAddress) {
+            defaults.set(data, forKey: key("homeAddress"))
+        } else {
+            defaults.removeObject(forKey: key("homeAddress"))
+        }
+
+        if let data = try? JSONEncoder().encode(settings.workAddress) {
+            defaults.set(data, forKey: key("workAddress"))
+        } else {
+            defaults.removeObject(forKey: key("workAddress"))
+        }
     }
 
     private func key(_ name: String) -> String {
