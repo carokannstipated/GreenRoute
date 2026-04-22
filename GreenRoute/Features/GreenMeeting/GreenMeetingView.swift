@@ -11,33 +11,37 @@ struct GreenMeetingView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack() {
             background
-            VStack(spacing: 24) {
-                Text("Meeting Duration")
-                    .font(.largeTitle.bold())
-
-                picker
-
-                Spacer().frame(maxHeight: 5)
-
-                Button {
-                    Task { await viewModel.startMeeting(hours: hours, minutes: minutes) }
-                } label: {
-                    Group {
-                        if viewModel.isSearching {
-                            ProgressView()
-                        } else {
-                            Label("Start Green Meeting", systemImage: "figure.walk")
+            if viewModel.isWalking && !viewModel.isShowingMap {
+                sessionPill
+            } else {
+                VStack(spacing: 24) {
+                    Text("Meeting Duration")
+                        .font(.largeTitle.bold())
+                    
+                    picker
+                    
+                    Spacer().frame(maxHeight: 5)
+                    
+                    Button {
+                        Task { await viewModel.startMeeting(hours: hours, minutes: minutes) }
+                    } label: {
+                        Group {
+                            if viewModel.isSearching {
+                                ProgressView()
+                            } else {
+                                Label("Start Green Meeting", systemImage: "figure.walk")
+                            }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: 40)
+                        .font(.title3.bold())
                     }
-                    .frame(maxWidth: .infinity, maxHeight: 40)
-                    .font(.title3.bold())
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .padding(.horizontal)
+                    .disabled(viewModel.isSearching || (hours == 0 && minutes == 0))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .padding(.horizontal)
-                .disabled(viewModel.isSearching || (hours == 0 && minutes == 0))
             }
         }
         .sheet(isPresented: $viewModel.isShowingMap) {
@@ -46,7 +50,8 @@ struct GreenMeetingView: View {
                     greenArea: greenArea,
                     origin: viewModel.currentCoordinate,
                     totalDurationMinutes: (hours * 60) + minutes,
-                    routeProvider: viewModel.routeProvider
+                    routeProvider: viewModel.routeProvider,
+                    isNavigating: $viewModel.isWalking
                 )
                 .presentationDragIndicator(.visible)
             }
@@ -87,6 +92,30 @@ struct GreenMeetingView: View {
                 .frame(width: 50, alignment: .leading)
         }
         .padding(.horizontal)
+    }
+
+    private var sessionPill: some View {
+        HStack(spacing: 12) {
+            Button { viewModel.resumeSession() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "figure.walk")
+                        .foregroundStyle(.green)
+                    Text("Meeting route active")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
+            Divider().frame(height: 16)
+            Button { viewModel.endSession() } label: {
+                Image(systemName: "xmark")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .glassEffect()
+        .padding(.top, 8)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     private var background: some View {

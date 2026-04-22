@@ -10,17 +10,20 @@ struct GreenBreakView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             background
+            if viewModel.isWalking && !viewModel.isShowingMap {
+                sessionPill
+            }
             VStack {
                 Spacer()
-                if let recommendation = viewModel.recommendation {
+                if let recommendation = viewModel.recommendation, !viewModel.isWalking {
                     RecommendationCard(
                         recommendation: recommendation,
                         onAccept: { viewModel.acceptRecommendation() },
                         onDismiss: { viewModel.dismissRecommendation() }
                     )
-                } else {
+                } else if viewModel.recommendation == nil {
                     idleView
                     Spacer().frame(maxHeight: 90)
                     Button {
@@ -36,6 +39,7 @@ struct GreenBreakView: View {
                 Spacer()
             }
             .padding()
+
         }
         .task {
             await viewModel.start()
@@ -51,7 +55,8 @@ struct GreenBreakView: View {
                 RouteMapView(
                     recommendation: recommendation,
                     origin: viewModel.lastKnownCoordinate,
-                    routeProvider: viewModel.routeProvider
+                    routeProvider: viewModel.routeProvider,
+                    isNavigating: $viewModel.isWalking
                 )
                 .presentationDragIndicator(.visible)
             }
@@ -82,6 +87,30 @@ struct GreenBreakView: View {
                 }
             }
         }
+    }
+
+    private var sessionPill: some View {
+        HStack(spacing: 12) {
+            Button { viewModel.resumeSession() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "leaf.fill")
+                        .foregroundStyle(.green)
+                    Text("Green Break active")
+                        .font(.subheadline.weight(.medium))
+                }
+            }
+            Divider().frame(height: 16)
+            Button { viewModel.endSession() } label: {
+                Image(systemName: "xmark")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .glassEffect()
+        .padding(.top, 8)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     private var background: some View {

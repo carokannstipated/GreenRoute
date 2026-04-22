@@ -14,10 +14,10 @@ struct GreenMeetingMapView: View {
 
     @State private var viewModel: GreenMeetingMapViewModel
     @State private var position: MapCameraPosition
-    @State private var isNavigating = false
+    @Binding var isNavigating: Bool
     @Environment(\.dismiss) private var dismiss
 
-    init(greenArea: GreenArea, origin: Coordinate, totalDurationMinutes: Int, routeProvider: any RouteProvider) {
+    init(greenArea: GreenArea, origin: Coordinate, totalDurationMinutes: Int, routeProvider: any RouteProvider, isNavigating: Binding<Bool>) {
         let vm = GreenMeetingMapViewModel(
             greenArea: greenArea,
             origin: origin,
@@ -25,6 +25,7 @@ struct GreenMeetingMapView: View {
             routeProvider: routeProvider
         )
         _viewModel = State(initialValue: vm)
+        _isNavigating = isNavigating
         _position = State(initialValue: .region(MKCoordinateRegion(
             center: CLLocationCoordinate2D(
                 latitude: greenArea.coordinate.latitude,

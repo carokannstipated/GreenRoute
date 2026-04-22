@@ -11,6 +11,7 @@ final class GreenBreakViewModel {
 
     var recommendation: Recommendation?
     var isShowingMap = false
+    var isWalking = false
     var errorMessage: String?
 
     // MARK: - Internal state
@@ -80,6 +81,16 @@ final class GreenBreakViewModel {
 
     func acceptRecommendation() {
         isShowingMap = true
+    }
+
+    func resumeSession() {
+        isShowingMap = true
+    }
+
+    func endSession() {
+        recommendation = nil
+        isShowingMap = false
+        isWalking = false
     }
 
     func dismissRecommendation() {

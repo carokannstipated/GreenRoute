@@ -6,12 +6,13 @@ struct RouteMapView: View {
 
     @State private var viewModel: RouteMapViewModel
     @State private var position: MapCameraPosition
-    @State private var isNavigating = false
+    @Binding var isNavigating: Bool
     @Environment(\.dismiss) private var dismiss
 
-    init(recommendation: Recommendation, origin: Coordinate?, routeProvider: any RouteProvider) {
+    init(recommendation: Recommendation, origin: Coordinate?, routeProvider: any RouteProvider, isNavigating: Binding<Bool>) {
         let vm = RouteMapViewModel(recommendation: recommendation, origin: origin, routeProvider: routeProvider)
         _viewModel = State(initialValue: vm)
+        _isNavigating = isNavigating
         _position = State(initialValue: .region(MKCoordinateRegion(
             center: CLLocationCoordinate2D(
                 latitude: recommendation.target.coordinate.latitude,

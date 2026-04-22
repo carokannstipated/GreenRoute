@@ -15,6 +15,7 @@ import GreenRouteService
 final class GreenMeetingViewModel {
 
     var isShowingMap = false
+    var isWalking = false
     var isSearching = false
     var errorMessage: String?
     var foundGreenArea: GreenArea?
@@ -33,6 +34,16 @@ final class GreenMeetingViewModel {
 
     var currentCoordinate: Coordinate {
         locationStore.lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
+    }
+
+    func resumeSession() {
+        isShowingMap = true
+    }
+
+    func endSession() {
+        foundGreenArea = nil
+        isShowingMap = false
+        isWalking = false
     }
 
     func startMeeting(hours: Int, minutes: Int) async {
