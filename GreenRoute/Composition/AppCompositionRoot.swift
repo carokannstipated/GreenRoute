@@ -72,12 +72,16 @@ struct AppCompositionRoot: View {
 
             let recordUseCase = RecordInactivityEventUseCase(repository: inactivityRepository)
 
+            // Shared settings
+            let settingsRepository = UserDefaultsSettingsRepository()
+
             // ViewModels
             greenBreakViewModel = GreenBreakViewModel(
                 service: service,
                 useCase: generateUseCase,
                 recordUseCase: recordUseCase,
-                locationStore: locationStore
+                locationStore: locationStore,
+                settingsRepository: settingsRepository
             )
 
             greenMeetingViewModel = GreenMeetingViewModel(
@@ -85,7 +89,7 @@ struct AppCompositionRoot: View {
                 routeProvider: service.routeProvider,
                 locationStore: locationStore
             )
-            settingsViewModel = SettingsViewModel(repository: UserDefaultsSettingsRepository())
+            settingsViewModel = SettingsViewModel(repository: settingsRepository)
         } catch {
             bootstrapError = error.localizedDescription
         }

@@ -13,6 +13,7 @@ final class GreenBreakViewModel {
     var isShowingMap = false
     var isWalking = false
     var errorMessage: String?
+    var noResultsNearby = false
 
     // MARK: - Internal state
 
@@ -20,6 +21,7 @@ final class GreenBreakViewModel {
     private var sentCountToday = 0
     private var lastNotificationSentAt: Date?
     private var observationTask: Task<Void, Never>?
+    private var radiusMultiplier: Double = 1.0
 
     // MARK: - Dependencies
 
@@ -27,26 +29,34 @@ final class GreenBreakViewModel {
     private let useCase: GenerateGreenBreakUseCase
     private let recordUseCase: RecordInactivityEventUseCase
     private let locationStore: LocationStore
+    private let settingsRepository: any SettingsRepository
     private let policy: NotificationPolicy
     private(set) var routeProvider: any RouteProvider
 
     // MARK: - Config
 
     private let inactivityThresholdMinutes = 20
-    private let maxDistance = DistanceMeters(value: 1000)
     private let searchRadius = DistanceMeters(value: 500)
+
+    private var maxDistance: DistanceMeters {
+        let minutes = settingsRepository.load().maxRouteDurationMinutes
+        let meters = Double(minutes) * 60.0 * 1.4 / 2.0 * radiusMultiplier
+        return DistanceMeters(value: meters)
+    }
 
     init(
         service: any GreenRouteService,
         useCase: GenerateGreenBreakUseCase,
         recordUseCase: RecordInactivityEventUseCase,
         locationStore: LocationStore,
+        settingsRepository: any SettingsRepository,
         policy: NotificationPolicy = NotificationPolicy()
     ) {
         self.service = service
         self.useCase = useCase
         self.recordUseCase = recordUseCase
         self.locationStore = locationStore
+        self.settingsRepository = settingsRepository
         self.policy = policy
         self.routeProvider = service.routeProvider
     }
@@ -61,14 +71,16 @@ final class GreenBreakViewModel {
             // Permission denied — notifications won't fire but the app continues
         }
 
-        await service.start()
-
         observationTask = Task { [weak self] in
             guard let self else { return }
             for await event in service.events {
                 await self.handle(event)
             }
         }
+        
+        await service.start()
+
+
     }
 
     func stop() async {
@@ -123,10 +135,11 @@ final class GreenBreakViewModel {
     }
     
     func generateOnDemand() async {
+        radiusMultiplier = 1.0
+        noResultsNearby = false
+
         let now = Date()
         let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
-
-        // Lav et minimalt InactivityEvent der altid opfylder threshold
         let fakeEvent = InactivityEvent(
             start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
             end: now
@@ -141,12 +154,48 @@ final class GreenBreakViewModel {
                 searchRadius: searchRadius,
                 sentCountToday: sentCountToday,
                 lastNotificationSentAt: lastNotificationSentAt,
-                shouldScheduleNotification: false, // ingen notification når brugeren selv vælger det
+                shouldScheduleNotification: false,
                 now: now
             )
 
             if let reco = output.recommendation {
                 recommendation = reco
+            } else {
+                noResultsNearby = true
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func expandAndRetry() async {
+        radiusMultiplier += 0.5
+        noResultsNearby = false
+
+        let now = Date()
+        let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
+        let fakeEvent = InactivityEvent(
+            start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
+            end: now
+        )
+
+        do {
+            let output = try await useCase.execute(
+                inactivity: fakeEvent,
+                currentCoordinate: coordinate,
+                inactivityThresholdMinutes: inactivityThresholdMinutes,
+                maxDistance: maxDistance,
+                searchRadius: searchRadius,
+                sentCountToday: sentCountToday,
+                lastNotificationSentAt: lastNotificationSentAt,
+                shouldScheduleNotification: false,
+                now: now
+            )
+
+            if let reco = output.recommendation {
+                recommendation = reco
+            } else {
+                noResultsNearby = true
             }
         } catch {
             errorMessage = error.localizedDescription
