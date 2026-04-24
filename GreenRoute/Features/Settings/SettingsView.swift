@@ -180,6 +180,7 @@ private struct RoutePreferencesView: View {
         }
         .navigationTitle("Route Preferences")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { viewModel.reload() }
     }
 }
 

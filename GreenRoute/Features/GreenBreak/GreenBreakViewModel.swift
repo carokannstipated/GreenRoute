@@ -21,7 +21,6 @@ final class GreenBreakViewModel {
     private var sentCountToday = 0
     private var lastNotificationSentAt: Date?
     private var observationTask: Task<Void, Never>?
-    private var radiusMultiplier: Double = 1.0
 
     // MARK: - Dependencies
 
@@ -38,10 +37,21 @@ final class GreenBreakViewModel {
     private let inactivityThresholdMinutes = 20
     private let searchRadius = DistanceMeters(value: 500)
 
+    var maxRouteDurationMinutes: Int
+
+    func setMaxRouteDuration(_ value: Int) {
+        maxRouteDurationMinutes = value
+        var s = settingsRepository.load()
+        s.maxRouteDurationMinutes = value
+        settingsRepository.save(s)
+    }
+
+    func reloadSettings() {
+        maxRouteDurationMinutes = settingsRepository.load().maxRouteDurationMinutes
+    }
+
     private var maxDistance: DistanceMeters {
-        let minutes = settingsRepository.load().maxRouteDurationMinutes
-        let meters = Double(minutes) * 60.0 * 1.4 / 2.0 * radiusMultiplier
-        return DistanceMeters(value: meters)
+        DistanceMeters(value: Double(maxRouteDurationMinutes) * 60.0 * 1.4 / 2.0)
     }
 
     init(
@@ -59,6 +69,7 @@ final class GreenBreakViewModel {
         self.settingsRepository = settingsRepository
         self.policy = policy
         self.routeProvider = service.routeProvider
+        self.maxRouteDurationMinutes = settingsRepository.load().maxRouteDurationMinutes
     }
 
     // MARK: - Lifecycle
@@ -135,7 +146,6 @@ final class GreenBreakViewModel {
     }
     
     func generateOnDemand() async {
-        radiusMultiplier = 1.0
         noResultsNearby = false
 
         let now = Date()
@@ -168,41 +178,7 @@ final class GreenBreakViewModel {
         }
     }
 
-    func expandAndRetry() async {
-        radiusMultiplier += 0.5
-        noResultsNearby = false
-
-        let now = Date()
-        let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
-        let fakeEvent = InactivityEvent(
-            start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
-            end: now
-        )
-
-        do {
-            let output = try await useCase.execute(
-                inactivity: fakeEvent,
-                currentCoordinate: coordinate,
-                inactivityThresholdMinutes: inactivityThresholdMinutes,
-                maxDistance: maxDistance,
-                searchRadius: searchRadius,
-                sentCountToday: sentCountToday,
-                lastNotificationSentAt: lastNotificationSentAt,
-                shouldScheduleNotification: false,
-                now: now
-            )
-
-            if let reco = output.recommendation {
-                recommendation = reco
-            } else {
-                noResultsNearby = true
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    // MARK: - Private
+// MARK: - Private
 
     private func handle(_ event: ServiceEvent) async {
         switch event {

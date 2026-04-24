@@ -56,6 +56,10 @@ final class SettingsViewModel {
         ))
     }
 
+    func reload() {
+        load()
+    }
+
     private func load() {
         let settings = repository.load()
         maxRouteDuration = settings.maxRouteDurationMinutes

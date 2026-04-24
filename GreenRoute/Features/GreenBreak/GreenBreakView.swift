@@ -23,6 +23,20 @@ struct GreenBreakView: View {
                         onAccept: { viewModel.acceptRecommendation() },
                         onDismiss: { viewModel.dismissRecommendation() }
                     )
+                } else if viewModel.noResultsNearby {
+                    noResultsView
+                    Spacer().frame(maxHeight: 24)
+                    durationStepper
+                    Spacer().frame(maxHeight: 24)
+                    Button {
+                        Task { await viewModel.generateOnDemand() }
+                    } label: {
+                        Label("Try again", systemImage: "arrow.triangle.2.circlepath")
+                            .frame(maxWidth: .infinity, maxHeight: 40)
+                            .font(.title3.bold())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
                 } else if viewModel.recommendation == nil {
                     idleView
                     Spacer().frame(maxHeight: 90)
@@ -41,6 +55,7 @@ struct GreenBreakView: View {
             .padding()
 
         }
+        .onAppear { viewModel.reloadSettings() }
         .task {
             await viewModel.start()
             do {
@@ -120,6 +135,42 @@ struct GreenBreakView: View {
             endPoint: .bottom
         )
         .ignoresSafeArea()
+    }
+
+    private var durationStepper: some View {
+        HStack {
+            Text("Max duration")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Stepper(
+                "\(viewModel.maxRouteDurationMinutes) min",
+                value: Binding(
+                    get: { viewModel.maxRouteDurationMinutes },
+                    set: { viewModel.setMaxRouteDuration($0) }
+                ),
+                in: 5...60,
+                step: 5
+            )
+            .fixedSize()
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private var noResultsView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(.green.opacity(0.4))
+
+            Text("Nothing nearby")
+                .font(.largeTitle.bold())
+
+            Text("No green areas within your current range. Try expanding the search area.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
     }
 
     private var idleView: some View {
