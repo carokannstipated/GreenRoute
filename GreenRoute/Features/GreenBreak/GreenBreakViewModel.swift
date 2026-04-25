@@ -51,7 +51,8 @@ final class GreenBreakViewModel {
     }
 
     private var maxDistance: DistanceMeters {
-        DistanceMeters(value: Double(maxRouteDurationMinutes) * 60.0 * 1.4 / 2.0)
+        let minutes = settingsRepository.load().maxRouteDurationMinutes
+        return DistanceMeters(value: Double(minutes) * 60.0 * 1.4 / 2.0)
     }
 
     init(
