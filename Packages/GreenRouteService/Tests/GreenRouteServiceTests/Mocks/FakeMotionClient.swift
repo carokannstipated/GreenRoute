@@ -10,6 +10,7 @@
 final class FakeMotionClient: MotionClient, @unchecked Sendable {
 
     private var handler: ((MotionActivity) -> Void)?
+    var stubbedActivities: [MotionActivity] = []
 
     func isActivityAvailable() -> Bool { true }
 
@@ -23,5 +24,9 @@ final class FakeMotionClient: MotionClient, @unchecked Sendable {
 
     func push(_ activity: MotionActivity) {
         handler?(activity)
+    }
+
+    func queryActivity(from start: Date, to end: Date) async -> [MotionActivity] {
+        stubbedActivities
     }
 }

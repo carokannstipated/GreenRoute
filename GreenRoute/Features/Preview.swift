@@ -6,8 +6,8 @@
 //
 
 import SwiftUI
-
+import GreenRouteService
 
 #Preview {
-    AppCompositionRoot()
+    AppCompositionRoot(service: GreenRouteServiceFactory.make())
 }

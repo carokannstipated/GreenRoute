@@ -21,6 +21,7 @@ actor DependencyContainer {
         let notificationScheduler: NotificationScheduler
         let greenAreaProvider: GreenAreaProvider
         let routeProvider: RouteProvider
+        let inactivityChecker: any InactivityChecking
     }
 
     static func production() -> (container: DependencyContainer, providers: Providers) {
@@ -67,7 +68,8 @@ actor DependencyContainer {
         let providers = Providers(
             notificationScheduler: notificationScheduler,
             greenAreaProvider: greenAreaProvider,
-            routeProvider: routeProvider
+            routeProvider: routeProvider,
+            inactivityChecker: inactivityMonitor
         )
 
         return (container, providers)

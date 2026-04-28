@@ -26,8 +26,9 @@ struct MotionActivity: Sendable, Equatable {
     )
 }
 
-protocol MotionClient {
+protocol MotionClient: Sendable {
     func isActivityAvailable() -> Bool
     func startActivityUpdates(handler: @escaping (MotionActivity) -> Void)
     func stopActivityUpdates()
+    func queryActivity(from start: Date, to end: Date) async -> [MotionActivity]
 }

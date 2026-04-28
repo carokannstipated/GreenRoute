@@ -8,6 +8,7 @@
 
 import SwiftUI
 import GreenRouteDomain
+import GreenRouteService
 
 struct RecommendationCard: View {
 
@@ -94,6 +95,6 @@ struct RecommendationCard: View {
 }
 
 #Preview {
-    AppCompositionRoot()
+    AppCompositionRoot(service: GreenRouteServiceFactory.make())
 }
 

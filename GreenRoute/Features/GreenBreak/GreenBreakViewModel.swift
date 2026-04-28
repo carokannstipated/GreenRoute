@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import GreenRouteDomain
+import GreenRouteData
 import GreenRouteService
 
 @MainActor
@@ -26,7 +27,7 @@ final class GreenBreakViewModel {
 
     private let service: any GreenRouteService
     private let useCase: GenerateGreenBreakUseCase
-    private let recordUseCase: RecordInactivityEventUseCase
+    private let recordUseCase: RecordInactivityEventUseCase?
     private let locationStore: LocationStore
     private let settingsRepository: any SettingsRepository
     private let policy: NotificationPolicy
@@ -58,9 +59,9 @@ final class GreenBreakViewModel {
     init(
         service: any GreenRouteService,
         useCase: GenerateGreenBreakUseCase,
-        recordUseCase: RecordInactivityEventUseCase,
-        locationStore: LocationStore,
-        settingsRepository: any SettingsRepository,
+        recordUseCase: RecordInactivityEventUseCase? = nil,
+        locationStore: LocationStore = LocationStore(),
+        settingsRepository: any SettingsRepository = UserDefaultsSettingsRepository(),
         policy: NotificationPolicy = NotificationPolicy()
     ) {
         self.service = service
@@ -184,7 +185,7 @@ final class GreenBreakViewModel {
     private func handle(_ event: ServiceEvent) async {
         switch event {
         case .inactivityDetected(let inactivity):
-            try? await recordUseCase.execute(inactivity)
+            try? await recordUseCase?.execute(inactivity)
             guard let coordinate = lastKnownCoordinate else { return }
             await generateRecommendation(for: inactivity, at: coordinate)
         case .significantLocationChange(let lat, let lon):

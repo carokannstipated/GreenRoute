@@ -8,7 +8,7 @@
 import Foundation
 import CoreMotion
 
-final class CoreMotionMotionClient: MotionClient {
+final class CoreMotionMotionClient: MotionClient, @unchecked Sendable {
 
     private let manager = CMMotionActivityManager()
     private let queue: OperationQueue = {
@@ -42,5 +42,23 @@ final class CoreMotionMotionClient: MotionClient {
 
     func stopActivityUpdates() {
         manager.stopActivityUpdates()
+    }
+
+    func queryActivity(from start: Date, to end: Date) async -> [MotionActivity] {
+        guard isActivityAvailable() else { return [] }
+        return await withCheckedContinuation { continuation in
+            manager.queryActivityStarting(from: start, to: end, to: queue) { activities, error in
+                let mapped = (error == nil ? activities : nil)?.map { a in
+                    MotionActivity(
+                        stationary: a.stationary,
+                        walking: a.walking,
+                        running: a.running,
+                        cycling: a.cycling,
+                        automotive: a.automotive
+                    )
+                } ?? []
+                continuation.resume(returning: mapped)
+            }
+        }
     }
 }

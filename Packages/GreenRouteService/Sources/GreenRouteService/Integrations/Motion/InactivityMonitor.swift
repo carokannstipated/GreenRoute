@@ -6,30 +6,22 @@
 //
 
 import Foundation
-import CoreMotion
 import GreenRouteDomain
 
-import Foundation
-import GreenRouteDomain
-
-actor InactivityMonitor {
+actor InactivityMonitor: InactivityChecking {
 
     struct Config: Sendable {
         let inactivityThreshold: TimeInterval
     }
 
-    private enum State {
-        case active
-        case maybeInactive(since: Date)
-        case inactive(since: Date)
-    }
+    private static let lookbackInterval: TimeInterval = 20 * 60
 
     private let motion: MotionClient
     private let clock: Clock
     private let config: Config
     private let emit: @Sendable (ServiceEvent) -> Void
 
-    private var state: State = .active
+    private var lastEmittedWindowEnd: Date?
 
     init(
         motion: MotionClient,
@@ -43,42 +35,30 @@ actor InactivityMonitor {
         self.emit = emit
     }
 
-    func start() {
-        motion.startActivityUpdates { [weak self] activity in
-            guard let self else { return }
-            Task {
-                await self.handle(activity)
-            }
-        }
-    }
+    func start() {}
 
     func stop() {
-        motion.stopActivityUpdates()
-        state = .active
+        lastEmittedWindowEnd = nil
     }
 
-    private func handle(_ activity: MotionActivity) {
+    func checkInactivity() async {
         let now = clock.now()
+        let windowStart = now.addingTimeInterval(-Self.lookbackInterval)
+        let activities = await motion.queryActivity(from: windowStart, to: now)
+        handleActivities(activities, windowStart: windowStart, windowEnd: now)
+    }
 
-        if activity.isMoving {
-            state = .active
-            return
+    func handleActivities(_ activities: [MotionActivity], windowStart: Date, windowEnd: Date) {
+        guard !activities.isEmpty else { return }
+
+        guard activities.allSatisfy(\.isStationary) else { return }
+
+        if let last = lastEmittedWindowEnd {
+            guard windowEnd.timeIntervalSince(last) >= config.inactivityThreshold else { return }
         }
 
-        guard activity.isStationary else { return }
-
-        switch state {
-        case .active:
-            state = .maybeInactive(since: now)
-
-        case .maybeInactive(let since):
-            guard now.timeIntervalSince(since) >= config.inactivityThreshold else { return }
-            let event = InactivityEvent(start: since, end: now) // tilpas hvis jeres model er anderledes
-            emit(.inactivityDetected(event))
-            state = .inactive(since: since)
-
-        case .inactive:
-            break
-        }
+        let event = InactivityEvent(start: windowStart, end: windowEnd)
+        emit(.inactivityDetected(event))
+        lastEmittedWindowEnd = windowEnd
     }
 }

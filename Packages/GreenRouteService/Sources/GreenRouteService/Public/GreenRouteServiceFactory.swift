@@ -14,7 +14,8 @@ public enum GreenRouteServiceFactory {
             container: container,
             notificationScheduler: providers.notificationScheduler,
             greenAreaProvider: providers.greenAreaProvider,
-            routeProvider: providers.routeProvider
+            routeProvider: providers.routeProvider,
+            inactivityChecker: providers.inactivityChecker
         )
     }
 }

@@ -10,113 +10,103 @@ import XCTest
 
 final class InactivityMonitorTests: XCTestCase {
 
-    func test_emitsEventAfterThreshold() async {
-        let motion = FakeMotionClient()
-        let clock = FakeClock(current: Date(timeIntervalSince1970: 0))
-
+    func test_handleActivities_allStationary_emitsEvent() async throws {
         let emitted = EventCollector()
+        let monitor = makeMonitor { event in Task { await emitted.append(event) } }
 
-        let monitor = InactivityMonitor(
-            motion: motion,
-            clock: clock,
-            config: .init(inactivityThreshold: 60),
-            emit: { event in
-                Task { await emitted.append(event) }
-            }
-        )
+        let windowStart = Date(timeIntervalSince1970: 0)
+        let windowEnd = Date(timeIntervalSince1970: 20 * 60)
+        let activities = [.stationaryOnly, .stationaryOnly]
 
-        await monitor.start()
-
-        // t=0 stationary -> maybeInactive
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10)) // Allow async processing
-        await XCTAssertEqualAsync(await emitted.count, 0)
-
-        // t=59 stationary -> still no event
-        clock.current = Date(timeIntervalSince1970: 59)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))
-        await XCTAssertEqualAsync(await emitted.count, 0)
-
-        // t=60 stationary -> emit
-        clock.current = Date(timeIntervalSince1970: 60)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))
+        await monitor.handleActivities(activities, windowStart: windowStart, windowEnd: windowEnd)
+        try await Task.sleep(for: .milliseconds(20))
 
         let events = await emitted.events
         XCTAssertEqual(events.count, 1)
-        // (valgfrit) assert case type:
-        if case .inactivityDetected = events[0] {
-            // ok
-        } else {
-            XCTFail("Expected inactivityDetected")
+        guard case .inactivityDetected(let event) = events[0] else {
+            return XCTFail("Expected inactivityDetected")
         }
+        XCTAssertEqual(event.start, windowStart)
+        XCTAssertEqual(event.end, windowEnd)
     }
 
-    func test_doesNotEmitAgainWhileStillInactive() async {
-        let motion = FakeMotionClient()
-        let clock = FakeClock(current: Date(timeIntervalSince1970: 0))
-
+    func test_handleActivities_hasMovingActivity_doesNotEmit() async throws {
         let emitted = EventCollector()
+        let monitor = makeMonitor { event in Task { await emitted.append(event) } }
 
-        let monitor = InactivityMonitor(
-            motion: motion,
-            clock: clock,
-            config: .init(inactivityThreshold: 60),
-            emit: { event in
-                Task { await emitted.append(event) }
-            }
+        let activities = [.stationaryOnly, .walking]
+        await monitor.handleActivities(activities, windowStart: Date(), windowEnd: Date())
+        try await Task.sleep(for: .milliseconds(20))
+
+        XCTAssertEqual(await emitted.count, 0)
+    }
+
+    func test_handleActivities_emptyActivities_doesNotEmit() async throws {
+        let emitted = EventCollector()
+        let monitor = makeMonitor { event in Task { await emitted.append(event) } }
+
+        await monitor.handleActivities([], windowStart: Date(), windowEnd: Date())
+        try await Task.sleep(for: .milliseconds(20))
+
+        XCTAssertEqual(await emitted.count, 0)
+    }
+
+    func test_handleActivities_doesNotEmitDuplicateWithinThreshold() async throws {
+        let emitted = EventCollector()
+        let monitor = makeMonitor(threshold: 60 * 60) { event in Task { await emitted.append(event) } }
+
+        let t0  = Date(timeIntervalSince1970: 0)
+        let t20 = Date(timeIntervalSince1970: 20 * 60)
+        let t40 = Date(timeIntervalSince1970: 40 * 60)
+        let activities = [.stationaryOnly]
+
+        await monitor.handleActivities(activities, windowStart: t0, windowEnd: t20)
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(await emitted.count, 1)
+
+        // 40 min after first window end — still within 60 min threshold
+        await monitor.handleActivities(activities, windowStart: t20, windowEnd: t40)
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(await emitted.count, 1)
+    }
+
+    func test_handleActivities_emitsAgainAfterThreshold() async throws {
+        let emitted = EventCollector()
+        let monitor = makeMonitor(threshold: 30 * 60) { event in Task { await emitted.append(event) } }
+
+        let t0  = Date(timeIntervalSince1970: 0)
+        let t20 = Date(timeIntervalSince1970: 20 * 60)
+        let t60 = Date(timeIntervalSince1970: 60 * 60)
+        let t80 = Date(timeIntervalSince1970: 80 * 60)
+        let activities = [.stationaryOnly]
+
+        await monitor.handleActivities(activities, windowStart: t0, windowEnd: t20)
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(await emitted.count, 1)
+
+        // 40 min gap since last window end — exceeds 30 min threshold
+        await monitor.handleActivities(activities, windowStart: t60, windowEnd: t80)
+        try await Task.sleep(for: .milliseconds(20))
+        XCTAssertEqual(await emitted.count, 2)
+    }
+
+    // MARK: - Helpers
+
+    private func makeMonitor(
+        threshold: TimeInterval = 20 * 60,
+        emit: @escaping @Sendable (ServiceEvent) -> Void
+    ) -> InactivityMonitor {
+        InactivityMonitor(
+            motion: FakeMotionClient(),
+            clock: FakeClock(current: Date()),
+            config: .init(inactivityThreshold: threshold),
+            emit: emit
         )
-
-        await monitor.start()
-
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))  // Wait for first push to process
-        clock.current = Date(timeIntervalSince1970: 60)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))
-        await XCTAssertEqualAsync(await emitted.count, 1)
-
-        // still stationary later -> should NOT emit again
-        clock.current = Date(timeIntervalSince1970: 120)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))
-        await XCTAssertEqualAsync(await emitted.count, 1)
-
-        // walking resets -> can emit again later
-        motion.push(.walking)
-        try? await Task.sleep(for: .milliseconds(10))  // Wait for walking state to process
-        clock.current = Date(timeIntervalSince1970: 121)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))  // Wait for stationary to process
-        clock.current = Date(timeIntervalSince1970: 181)
-        motion.push(.stationaryOnly)
-        try? await Task.sleep(for: .milliseconds(10))  // Wait for final event
-        await XCTAssertEqualAsync(await emitted.count, 2)
     }
 }
-// Helper actor to collect events in a thread-safe way
+
 actor EventCollector {
     private(set) var events: [ServiceEvent] = []
-    
     var count: Int { events.count }
-    
-    func append(_ event: ServiceEvent) {
-        events.append(event)
-    }
+    func append(_ event: ServiceEvent) { events.append(event) }
 }
-
-// Helper function for async assertions
-func XCTAssertEqualAsync<T: Equatable>(_ expression1: @autoclosure () async throws -> T, 
-                                        _ expression2: @autoclosure () async throws -> T,
-                                        file: StaticString = #filePath,
-                                        line: UInt = #line) async {
-    do {
-        let value1 = try await expression1()
-        let value2 = try await expression2()
-        XCTAssertEqual(value1, value2, file: file, line: line)
-    } catch {
-        XCTFail("Threw error: \(error)", file: file, line: line)
-    }
-}
-

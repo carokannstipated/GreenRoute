@@ -11,6 +11,8 @@ import GreenRouteService
 
 struct AppCompositionRoot: View {
 
+    let service: any GreenRouteService
+
     @State private var greenBreakViewModel: GreenBreakViewModel?
     @State private var greenMeetingViewModel: GreenMeetingViewModel?
     @State private var settingsViewModel: SettingsViewModel?
@@ -57,9 +59,6 @@ struct AppCompositionRoot: View {
 
             // Shared location state
             let locationStore = LocationStore()
-
-            // Service
-            let service = GreenRouteServiceFactory.make()
 
             // Use cases
             let generateUseCase = GenerateGreenBreakUseCase(

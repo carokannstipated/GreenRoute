@@ -14,6 +14,8 @@ final class FakeGreenRouteService: GreenRouteService, @unchecked Sendable {
 
     var greenAreaProvider: any GreenAreaProvider = FakeGreenAreaProvider()
     var notificationScheduler: any NotificationScheduler = FakeNotificationScheduler()
+    var routeProvider: any RouteProvider = FakeRouteProvider()
+    var inactivityChecker: any InactivityChecking = FakeInactivityChecker()
 
     private let continuation: AsyncStream<ServiceEvent>.Continuation
     let events: AsyncStream<ServiceEvent>
@@ -33,6 +35,17 @@ final class FakeGreenRouteService: GreenRouteService, @unchecked Sendable {
     func emit(_ event: ServiceEvent) {
         continuation.yield(event)
     }
+}
+
+final class FakeRouteProvider: RouteProvider, @unchecked Sendable {
+    func calculateRoute(from: Coordinate, to: Coordinate) async throws -> RouteResult {
+        RouteResult(coordinates: [], expectedTravelTimeSeconds: 0)
+    }
+}
+
+actor FakeInactivityChecker: InactivityChecking {
+    private(set) var checkCount = 0
+    func checkInactivity() async { checkCount += 1 }
 }
 
 final class FakeGreenAreaProvider: GreenAreaProvider, @unchecked Sendable {

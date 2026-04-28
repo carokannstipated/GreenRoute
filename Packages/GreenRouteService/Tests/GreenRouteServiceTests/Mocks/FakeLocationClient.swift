@@ -17,6 +17,8 @@ final class FakeLocationClient: LocationClient, @unchecked Sendable {
         permissionRequested = true
     }
 
+    func requestLocation() {}
+
     func startMonitoringSignificantLocationChanges(handler: @escaping @Sendable (LocationUpdate) -> Void) {
         isMonitoring = true
         self.handler = handler
