@@ -28,6 +28,7 @@ final class GreenBreakViewModel {
     private let service: any GreenRouteService
     private let useCase: GenerateGreenBreakUseCase
     private let recordUseCase: RecordInactivityEventUseCase?
+    private let locationVisitRepository: (any LocationVisitRepository)?
     private let locationStore: LocationStore
     private let settingsRepository: any SettingsRepository
     private let policy: NotificationPolicy
@@ -35,7 +36,7 @@ final class GreenBreakViewModel {
 
     // MARK: - Config
 
-    private let inactivityThresholdMinutes = 20
+    private let inactivityThresholdMinutes = 2
     private let searchRadius = DistanceMeters(value: 500)
 
     var maxRouteDurationMinutes: Int
@@ -60,6 +61,7 @@ final class GreenBreakViewModel {
         service: any GreenRouteService,
         useCase: GenerateGreenBreakUseCase,
         recordUseCase: RecordInactivityEventUseCase? = nil,
+        locationVisitRepository: (any LocationVisitRepository)? = nil,
         locationStore: LocationStore = LocationStore(),
         settingsRepository: any SettingsRepository = UserDefaultsSettingsRepository(),
         policy: NotificationPolicy = NotificationPolicy()
@@ -67,6 +69,7 @@ final class GreenBreakViewModel {
         self.service = service
         self.useCase = useCase
         self.recordUseCase = recordUseCase
+        self.locationVisitRepository = locationVisitRepository
         self.locationStore = locationStore
         self.settingsRepository = settingsRepository
         self.policy = policy
@@ -190,8 +193,9 @@ final class GreenBreakViewModel {
             await generateRecommendation(for: inactivity, at: coordinate)
         case .significantLocationChange(let lat, let lon):
             locationStore.lastKnownCoordinate = Coordinate(latitude: lat, longitude: lon)
-        case .locationVisit:
-            break
+        case .locationVisit(let visit):
+            locationStore.lastKnownCoordinate = visit.coordinate
+            try? await locationVisitRepository?.save(visit)
         }
     }
 

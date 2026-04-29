@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		9D45EF9D2F6998D300E02F08 /* GreenRouteService in Frameworks */ = {isa = PBXBuildFile; productRef = 9D45EF9C2F6998D300E02F08 /* GreenRouteService */; };
 		9D45EF9F2F6998D700E02F08 /* GreenRouteData in Frameworks */ = {isa = PBXBuildFile; productRef = 9D45EF9E2F6998D700E02F08 /* GreenRouteData */; };
+		9DEE0A2C2FA0C8C100F9A018 /* GreenRouteDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,9 +35,22 @@
 		9D8D6EE12F52FA9F00E8FAC5 /* GreenRouteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GreenRouteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9DEE0A2E2FA0D31A00F9A018 /* Exceptions for "GreenRoute" folder in "GreenRoute" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9D8D6EC72F52FA9E00E8FAC5 /* GreenRoute */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9D8D6ECA2F52FA9E00E8FAC5 /* GreenRoute */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9DEE0A2E2FA0D31A00F9A018 /* Exceptions for "GreenRoute" folder in "GreenRoute" target */,
+			);
 			path = GreenRoute;
 			sourceTree = "<group>";
 		};
@@ -58,6 +72,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9D45EF9F2F6998D700E02F08 /* GreenRouteData in Frameworks */,
+				9DEE0A2C2FA0C8C100F9A018 /* GreenRouteDomain in Frameworks */,
 				9D45EF9D2F6998D300E02F08 /* GreenRouteService in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -129,6 +144,7 @@
 			packageProductDependencies = (
 				9D45EF9C2F6998D300E02F08 /* GreenRouteService */,
 				9D45EF9E2F6998D700E02F08 /* GreenRouteData */,
+				9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */,
 			);
 			productName = GreenRoute;
 			productReference = 9D8D6EC82F52FA9E00E8FAC5 /* GreenRoute.app */;
@@ -215,6 +231,7 @@
 			packageReferences = (
 				9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */,
 				9D45EF932F6997B800E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */,
+				9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D8D6EC92F52FA9E00E8FAC5 /* Products */;
@@ -423,13 +440,14 @@
 				DEVELOPMENT_TEAM = JX5A77F37B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GreenRoute/Info.plist;
+				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = com.greenroute.inactivity;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Green​Route uses your location to suggest green breaks even when the app is in the background.\nGreen​Route uses your location to suggest green breaks even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GreenRoute uses your location to find green areas nearby";
 				INFOPLIST_KEY_NSMotionUsageDescription = "GreenRoute uses Motion Data";
-				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = "com.greenroute.inactivity";
-				INFOPLIST_KEY_UIBackgroundModes = "fetch location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "fetch location";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -438,7 +456,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = feg.dgtr.GreenRoute;
+				PRODUCT_BUNDLE_IDENTIFIER = com.feglab.greenroute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -460,13 +478,14 @@
 				DEVELOPMENT_TEAM = JX5A77F37B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GreenRoute/Info.plist;
+				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = com.greenroute.inactivity;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Green​Route uses your location to suggest green breaks even when the app is in the background.\nGreen​Route uses your location to suggest green breaks even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GreenRoute uses your location to find green areas nearby";
 				INFOPLIST_KEY_NSMotionUsageDescription = "GreenRoute uses Motion Data";
-				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = "com.greenroute.inactivity";
-				INFOPLIST_KEY_UIBackgroundModes = "fetch location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "fetch location";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -475,7 +494,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = feg.dgtr.GreenRoute;
+				PRODUCT_BUNDLE_IDENTIFIER = com.feglab.greenroute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -613,6 +632,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GreenRouteDomain;
+		};
 		9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/GreenRouteData;
@@ -633,6 +656,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */;
 			productName = GreenRouteData;
+		};
+		9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */;
+			productName = GreenRouteDomain;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

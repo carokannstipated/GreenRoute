@@ -56,6 +56,7 @@ struct AppCompositionRoot: View {
             let container = try ModelContainerFactory.makePersistentContainer()
             let recommendationRepository = SwiftDataRecommendationRepository(container: container)
             let inactivityRepository = SwiftDataInactivityEventRepository(container: container)
+            let locationVisitRepository = SwiftDataLocationVisitRepository(container: container)
 
             // Shared location state
             let locationStore = LocationStore()
@@ -79,6 +80,7 @@ struct AppCompositionRoot: View {
                 service: service,
                 useCase: generateUseCase,
                 recordUseCase: recordUseCase,
+                locationVisitRepository: locationVisitRepository,
                 locationStore: locationStore,
                 settingsRepository: settingsRepository
             )

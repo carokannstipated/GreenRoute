@@ -20,6 +20,7 @@ struct NotificationRequestSnapshot: Sendable {
         let repeats: Bool
         let hour: Int?
         let minute: Int?
+        let second: Int?
     }
     
     init(from request: UNNotificationRequest) {
@@ -33,7 +34,8 @@ struct NotificationRequestSnapshot: Sendable {
                 isCalendar: true,
                 repeats: calendarTrigger.repeats,
                 hour: calendarTrigger.dateComponents.hour,
-                minute: calendarTrigger.dateComponents.minute
+                minute: calendarTrigger.dateComponents.minute,
+                second: calendarTrigger.dateComponents.second
             )
         } else {
             self.trigger = nil

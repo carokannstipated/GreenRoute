@@ -16,7 +16,7 @@ final class InactivityMonitorTests: XCTestCase {
 
         let windowStart = Date(timeIntervalSince1970: 0)
         let windowEnd = Date(timeIntervalSince1970: 20 * 60)
-        let activities = [.stationaryOnly, .stationaryOnly]
+        let activities: [MotionActivity] = [.stationaryOnly, .stationaryOnly]
 
         await monitor.handleActivities(activities, windowStart: windowStart, windowEnd: windowEnd)
         try await Task.sleep(for: .milliseconds(20))
@@ -34,11 +34,12 @@ final class InactivityMonitorTests: XCTestCase {
         let emitted = EventCollector()
         let monitor = makeMonitor { event in Task { await emitted.append(event) } }
 
-        let activities = [.stationaryOnly, .walking]
+        let activities: [MotionActivity] = [.stationaryOnly, .walking]
         await monitor.handleActivities(activities, windowStart: Date(), windowEnd: Date())
         try await Task.sleep(for: .milliseconds(20))
 
-        XCTAssertEqual(await emitted.count, 0)
+        let count = await emitted.count
+        XCTAssertEqual(count, 0)
     }
 
     func test_handleActivities_emptyActivities_doesNotEmit() async throws {
@@ -48,7 +49,8 @@ final class InactivityMonitorTests: XCTestCase {
         await monitor.handleActivities([], windowStart: Date(), windowEnd: Date())
         try await Task.sleep(for: .milliseconds(20))
 
-        XCTAssertEqual(await emitted.count, 0)
+        let count = await emitted.count
+        XCTAssertEqual(count, 0)
     }
 
     func test_handleActivities_doesNotEmitDuplicateWithinThreshold() async throws {
@@ -58,16 +60,18 @@ final class InactivityMonitorTests: XCTestCase {
         let t0  = Date(timeIntervalSince1970: 0)
         let t20 = Date(timeIntervalSince1970: 20 * 60)
         let t40 = Date(timeIntervalSince1970: 40 * 60)
-        let activities = [.stationaryOnly]
+        let activities: [MotionActivity] = [.stationaryOnly]
 
         await monitor.handleActivities(activities, windowStart: t0, windowEnd: t20)
         try await Task.sleep(for: .milliseconds(20))
-        XCTAssertEqual(await emitted.count, 1)
+        let firstCount = await emitted.count
+        XCTAssertEqual(firstCount, 1)
 
         // 40 min after first window end — still within 60 min threshold
         await monitor.handleActivities(activities, windowStart: t20, windowEnd: t40)
         try await Task.sleep(for: .milliseconds(20))
-        XCTAssertEqual(await emitted.count, 1)
+        let secondCount = await emitted.count
+        XCTAssertEqual(secondCount, 1)
     }
 
     func test_handleActivities_emitsAgainAfterThreshold() async throws {
@@ -78,16 +82,18 @@ final class InactivityMonitorTests: XCTestCase {
         let t20 = Date(timeIntervalSince1970: 20 * 60)
         let t60 = Date(timeIntervalSince1970: 60 * 60)
         let t80 = Date(timeIntervalSince1970: 80 * 60)
-        let activities = [.stationaryOnly]
+        let activities: [MotionActivity] = [.stationaryOnly]
 
         await monitor.handleActivities(activities, windowStart: t0, windowEnd: t20)
         try await Task.sleep(for: .milliseconds(20))
-        XCTAssertEqual(await emitted.count, 1)
+        let firstCount = await emitted.count
+        XCTAssertEqual(firstCount, 1)
 
         // 40 min gap since last window end — exceeds 30 min threshold
         await monitor.handleActivities(activities, windowStart: t60, windowEnd: t80)
         try await Task.sleep(for: .milliseconds(20))
-        XCTAssertEqual(await emitted.count, 2)
+        let secondCount = await emitted.count
+        XCTAssertEqual(secondCount, 2)
     }
 
     // MARK: - Helpers

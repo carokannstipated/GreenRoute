@@ -45,7 +45,12 @@ final class FakeRouteProvider: RouteProvider, @unchecked Sendable {
 
 actor FakeInactivityChecker: InactivityChecking {
     private(set) var checkCount = 0
-    func checkInactivity() async { checkCount += 1 }
+    var stubbedEvent: InactivityEvent?
+
+    func checkInactivity() async -> InactivityEvent? {
+        checkCount += 1
+        return stubbedEvent
+    }
 }
 
 final class FakeGreenAreaProvider: GreenAreaProvider, @unchecked Sendable {

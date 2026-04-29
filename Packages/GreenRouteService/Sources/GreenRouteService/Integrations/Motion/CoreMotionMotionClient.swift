@@ -8,6 +8,7 @@
 import Foundation
 import CoreMotion
 
+#if os(iOS)
 final class CoreMotionMotionClient: MotionClient, @unchecked Sendable {
 
     private let manager = CMMotionActivityManager()
@@ -62,3 +63,11 @@ final class CoreMotionMotionClient: MotionClient, @unchecked Sendable {
         }
     }
 }
+#else
+final class CoreMotionMotionClient: MotionClient, @unchecked Sendable {
+    func isActivityAvailable() -> Bool { false }
+    func startActivityUpdates(handler: @escaping (MotionActivity) -> Void) {}
+    func stopActivityUpdates() {}
+    func queryActivity(from start: Date, to end: Date) async -> [MotionActivity] { [] }
+}
+#endif

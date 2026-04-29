@@ -21,7 +21,8 @@ public struct RecommendationEngine: Sendable {
         inactivityThresholdMinutes: Int,
         maxDistance: DistanceMeters,
         assumedWalkingSpeedMetersPerSecond: Double = 1.4,
-        createdAt: Date
+        createdAt: Date,
+        trigger: Recommendation.Trigger = .inactivity
     ) -> Recommendation? {
 
         precondition(inactivityThresholdMinutes >= 0, "inactivityThresholdMinutes cannot be negative")
@@ -84,7 +85,7 @@ public struct RecommendationEngine: Sendable {
 
         return Recommendation(
             createdAt: createdAt,
-            trigger: .inactivity,
+            trigger: trigger,
             target: nearest,
             distance: distance,
             estimatedWalkMinutes: minutes

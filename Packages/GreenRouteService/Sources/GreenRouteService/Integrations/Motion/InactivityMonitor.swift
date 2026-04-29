@@ -12,9 +12,11 @@ actor InactivityMonitor: InactivityChecking {
 
     struct Config: Sendable {
         let inactivityThreshold: TimeInterval
-    }
 
-    private static let lookbackInterval: TimeInterval = 20 * 60
+        var foregroundCheckInterval: TimeInterval {
+            min(inactivityThreshold, 60)
+        }
+    }
 
     private let motion: MotionClient
     private let clock: Clock
@@ -22,6 +24,7 @@ actor InactivityMonitor: InactivityChecking {
     private let emit: @Sendable (ServiceEvent) -> Void
 
     private var lastEmittedWindowEnd: Date?
+    private var monitoringTask: Task<Void, Never>?
 
     init(
         motion: MotionClient,
@@ -35,30 +38,50 @@ actor InactivityMonitor: InactivityChecking {
         self.emit = emit
     }
 
-    func start() {}
+    func start() {
+        guard monitoringTask == nil else { return }
+
+        let initialDelay = config.inactivityThreshold
+        let checkInterval = config.foregroundCheckInterval
+
+        monitoringTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(initialDelay))
+
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.checkInactivity()
+                try? await Task.sleep(for: .seconds(checkInterval))
+            }
+        }
+    }
 
     func stop() {
+        monitoringTask?.cancel()
+        monitoringTask = nil
         lastEmittedWindowEnd = nil
     }
 
-    func checkInactivity() async {
+    @discardableResult
+    func checkInactivity() async -> InactivityEvent? {
         let now = clock.now()
-        let windowStart = now.addingTimeInterval(-Self.lookbackInterval)
+        let windowStart = now.addingTimeInterval(-config.inactivityThreshold)
         let activities = await motion.queryActivity(from: windowStart, to: now)
-        handleActivities(activities, windowStart: windowStart, windowEnd: now)
+        return handleActivities(activities, windowStart: windowStart, windowEnd: now)
     }
 
-    func handleActivities(_ activities: [MotionActivity], windowStart: Date, windowEnd: Date) {
-        guard !activities.isEmpty else { return }
+    @discardableResult
+    func handleActivities(_ activities: [MotionActivity], windowStart: Date, windowEnd: Date) -> InactivityEvent? {
+        guard !activities.isEmpty else { return nil }
 
-        guard activities.allSatisfy(\.isStationary) else { return }
+        guard activities.allSatisfy(\.isStationary) else { return nil }
 
         if let last = lastEmittedWindowEnd {
-            guard windowEnd.timeIntervalSince(last) >= config.inactivityThreshold else { return }
+            guard windowEnd.timeIntervalSince(last) >= config.inactivityThreshold else { return nil }
         }
 
         let event = InactivityEvent(start: windowStart, end: windowEnd)
         emit(.inactivityDetected(event))
         lastEmittedWindowEnd = windowEnd
+        return event
     }
 }

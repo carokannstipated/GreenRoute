@@ -1,5 +1,7 @@
 import Foundation
+import GreenRouteDomain
 
 public protocol InactivityChecking: Sendable {
-    func checkInactivity() async
+    @discardableResult
+    func checkInactivity() async -> InactivityEvent?
 }

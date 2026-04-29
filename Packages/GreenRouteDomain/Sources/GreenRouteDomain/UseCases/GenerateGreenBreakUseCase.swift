@@ -51,7 +51,8 @@ public struct GenerateGreenBreakUseCase: Sendable {
         sentCountToday: Int,
         lastNotificationSentAt: Date?,
         shouldScheduleNotification: Bool,
-        now: Date
+        now: Date,
+        trigger: Recommendation.Trigger = .inactivity
     ) async throws -> Output {
 
         // 1) Fetch nearby green areas (Platform implementation will do MapKit/POI)
@@ -71,7 +72,8 @@ public struct GenerateGreenBreakUseCase: Sendable {
             nearbyGreenAreas: areas,
             inactivityThresholdMinutes: inactivityThresholdMinutes,
             maxDistance: maxDistance,
-            createdAt: now
+            createdAt: now,
+            trigger: trigger
         ) else {
             return Output(recommendation: nil, didScheduleNotification: false)
         }
@@ -98,7 +100,7 @@ public struct GenerateGreenBreakUseCase: Sendable {
             id: "greenroute.reco.\(recommendation.id.uuidString)",
             title: "Green break?",
             body: "\(recommendation.target.name) is \(Int(recommendation.distance.value))m away (~\(recommendation.estimatedWalkMinutes) min walk).",
-            fireAt: now
+            fireAt: now.addingTimeInterval(1)
         )
 
         try await notificationScheduler.schedule(request)

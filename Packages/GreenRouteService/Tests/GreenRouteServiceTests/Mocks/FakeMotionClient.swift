@@ -6,6 +6,7 @@
 //
 
 @testable import GreenRouteService
+import Foundation
 
 final class FakeMotionClient: MotionClient, @unchecked Sendable {
 

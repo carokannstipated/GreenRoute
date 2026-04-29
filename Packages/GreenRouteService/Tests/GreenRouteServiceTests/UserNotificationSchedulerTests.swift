@@ -67,13 +67,14 @@ final class UserNotificationSchedulerTests: XCTestCase {
 
     func test_triggerFiresAtSpecifiedHourAndMinute() async throws {
         let (scheduler, center) = makeSUT()
-        let fireDate = date(hour: 14, minute: 30)
+        let fireDate = date(hour: 14, minute: 30, second: 45)
         try await scheduler.schedule(makeRequest(fireAt: fireDate))
 
         let requests = await center.getScheduledRequests()
         let trigger = requests.first?.trigger
         XCTAssertEqual(trigger?.hour, 14)
         XCTAssertEqual(trigger?.minute, 30)
+        XCTAssertEqual(trigger?.second, 45)
     }
 
     // MARK: - Error propagation
@@ -127,10 +128,10 @@ final class UserNotificationSchedulerTests: XCTestCase {
         NotificationRequest(id: id, title: title, body: body, fireAt: fireAt ?? date(hour: 13, minute: 0))
     }
 
-    private func date(hour: Int, minute: Int) -> Date {
+    private func date(hour: Int, minute: Int, second: Int = 0) -> Date {
         var c = DateComponents()
         c.year = 2026; c.month = 3; c.day = 17
-        c.hour = hour; c.minute = minute; c.second = 0
+        c.hour = hour; c.minute = minute; c.second = second
         return Calendar.current.date(from: c)!
     }
 }

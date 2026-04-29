@@ -39,7 +39,7 @@ actor DependencyContainer {
         let inactivityMonitor = InactivityMonitor(
             motion: motion,
             clock: clock,
-            config: .init(inactivityThreshold: 20 * 60),
+            config: .init(inactivityThreshold: 2 * 60),
             emit: { @Sendable event in
                 guard let container = box.container else { return }
                 Task {
