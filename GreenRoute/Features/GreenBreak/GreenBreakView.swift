@@ -61,7 +61,7 @@ struct GreenBreakView: View {
             do {
                 try await Task.sleep(for: .seconds(86400 * 365 * 100))
             } catch {
-                // Task was cancelled
+                
             }
             await viewModel.stop()
         }

@@ -25,7 +25,6 @@ final class UserDefaultsSettingsRepositoryTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - Load
 
     func test_load_returnsDefaults_whenNothingSaved() {
         let settings = sut.load()
@@ -34,7 +33,6 @@ final class UserDefaultsSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(settings.maxRouteDurationMinutes, 15)
     }
 
-    // MARK: - Save and Load
 
     func test_saveAndLoad_persistsMaxRouteDuration() {
         var settings = AppSettings.default
@@ -58,7 +56,6 @@ final class UserDefaultsSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(loaded.maxRouteDurationMinutes, 45)
     }
 
-    // MARK: - Isolation
 
     func test_separateInstances_shareStorage_whenSameDefaults() {
         var settings = AppSettings.default

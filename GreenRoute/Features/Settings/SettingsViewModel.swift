@@ -12,24 +12,18 @@ import GreenRouteDomain
 @Observable
 final class SettingsViewModel {
 
-    // MARK: - UI State
-
     var maxRouteDuration: Int = 15
     var homeAddress: SavedAddress?
     var workAddress: SavedAddress?
 
-    // MARK: - Dependencies
-
     private let repository: SettingsRepository
 
-    // MARK: - Init
 
     init(repository: SettingsRepository) {
         self.repository = repository
         load()
     }
 
-    // MARK: - Actions
 
     func setMaxRouteDuration(_ value: Int) {
         maxRouteDuration = value
@@ -46,7 +40,6 @@ final class SettingsViewModel {
         save()
     }
 
-    // MARK: - Private
 
     private func save() {
         repository.save(AppSettings(

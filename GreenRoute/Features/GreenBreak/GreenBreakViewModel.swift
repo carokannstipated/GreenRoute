@@ -8,7 +8,6 @@ import GreenRouteService
 @Observable
 final class GreenBreakViewModel {
 
-    // MARK: - UI State
 
     var recommendation: Recommendation?
     var isShowingMap = false
@@ -16,14 +15,12 @@ final class GreenBreakViewModel {
     var errorMessage: String?
     var noResultsNearby = false
 
-    // MARK: - Internal state
 
     var lastKnownCoordinate: Coordinate? { locationStore.lastKnownCoordinate }
     private var sentCountToday = 0
     private var lastNotificationSentAt: Date?
     private var observationTask: Task<Void, Never>?
 
-    // MARK: - Dependencies
 
     private let service: any GreenRouteService
     private let useCase: GenerateGreenBreakUseCase
@@ -34,7 +31,6 @@ final class GreenBreakViewModel {
     private let policy: NotificationPolicy
     private(set) var routeProvider: any RouteProvider
 
-    // MARK: - Config
 
     private let inactivityThresholdMinutes = 2
     private let searchRadius = DistanceMeters(value: 500)
@@ -77,15 +73,10 @@ final class GreenBreakViewModel {
         self.maxRouteDurationMinutes = settingsRepository.load().maxRouteDurationMinutes
     }
 
-    // MARK: - Lifecycle
 
     func start() async {
-        do {
-            try await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound])
-        } catch {
-            // Permission denied — notifications won't fire but the app continues
-        }
+        _ = try? await UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound])
 
         observationTask = Task { [weak self] in
             guard let self else { return }
@@ -93,10 +84,8 @@ final class GreenBreakViewModel {
                 await self.handle(event)
             }
         }
-        
+
         await service.start()
-
-
     }
 
     func stop() async {
@@ -105,7 +94,6 @@ final class GreenBreakViewModel {
         await service.stop()
     }
 
-    // MARK: - User actions
 
     func acceptRecommendation() {
         isShowingMap = true
@@ -125,12 +113,8 @@ final class GreenBreakViewModel {
         recommendation = nil
     }
 
-    // MARK: - Demo
 
     func simulateInactivity() async {
-        #if DEBUG
-        print("🔵 simulateInactivity called, coordinate: \(String(describing: lastKnownCoordinate))")
-        #endif
 
         let now = Date()
         let fakeEvent = InactivityEvent(
@@ -138,16 +122,7 @@ final class GreenBreakViewModel {
             end: now
         )
         let coordinate = lastKnownCoordinate ?? Coordinate(latitude: 55.6761, longitude: 12.5683)
-
-        #if DEBUG
-        print("🔵 calling generateRecommendation with \(coordinate)")
-        #endif
-
         await generateRecommendation(for: fakeEvent, at: coordinate)
-
-        #if DEBUG
-        print("🔵 generateRecommendation finished, recommendation: \(String(describing: recommendation))")
-        #endif
     }
     
     func generateOnDemand() async {
@@ -183,7 +158,6 @@ final class GreenBreakViewModel {
         }
     }
 
-// MARK: - Private
 
     private func handle(_ event: ServiceEvent) async {
         switch event {

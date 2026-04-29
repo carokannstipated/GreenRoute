@@ -17,6 +17,8 @@ struct AppCompositionRoot: View {
     @State private var greenMeetingViewModel: GreenMeetingViewModel?
     @State private var settingsViewModel: SettingsViewModel?
     @State private var bootstrapError: String?
+    @AppStorage("motionSheetSeen") private var motionSheetSeen = false
+    @State private var showMotionSheet = false
 
     var body: some View {
         Group {
@@ -37,6 +39,16 @@ struct AppCompositionRoot: View {
                     }
                     .tabItem { Label("Settings", systemImage: "gearshape") }
                 }
+                .sheet(isPresented: $showMotionSheet) {
+                    MotionPermissionPrompt(isPresented: $showMotionSheet)
+                        .presentationDetents([.medium])
+                }
+                .task {
+                    guard !motionSheetSeen else { return }
+                    motionSheetSeen = true
+                    try? await Task.sleep(for: .seconds(2))
+                    showMotionSheet = true
+                }
             } else if let error = bootstrapError {
                 ContentUnavailableView(
                     "Could not start app",
@@ -52,16 +64,14 @@ struct AppCompositionRoot: View {
 
     private func bootstrap() async {
         do {
-            // Data
+
             let container = try ModelContainerFactory.makePersistentContainer()
             let recommendationRepository = SwiftDataRecommendationRepository(container: container)
             let inactivityRepository = SwiftDataInactivityEventRepository(container: container)
             let locationVisitRepository = SwiftDataLocationVisitRepository(container: container)
 
-            // Shared location state
             let locationStore = LocationStore()
 
-            // Use cases
             let generateUseCase = GenerateGreenBreakUseCase(
                 greenAreaProvider: service.greenAreaProvider,
                 recommendationEngine: RecommendationEngine(),
@@ -72,10 +82,8 @@ struct AppCompositionRoot: View {
 
             let recordUseCase = RecordInactivityEventUseCase(repository: inactivityRepository)
 
-            // Shared settings
             let settingsRepository = UserDefaultsSettingsRepository()
 
-            // ViewModels
             greenBreakViewModel = GreenBreakViewModel(
                 service: service,
                 useCase: generateUseCase,
@@ -94,5 +102,35 @@ struct AppCompositionRoot: View {
         } catch {
             bootstrapError = error.localizedDescription
         }
+    }
+}
+
+private struct MotionPermissionPrompt: View {
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "figure.walk.circle.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(.green)
+
+            VStack(spacing: 8) {
+                Text("Enable Motion & Fitness")
+                    .font(.title2.bold())
+                Text("GreenRoute uses motion data to detect when you've been sitting too long and nudge you to take a green break.\n\nHead to **Settings → Permissions** to enable it.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Got It") {
+                isPresented = false
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 4)
+        }
+        .padding(32)
     }
 }

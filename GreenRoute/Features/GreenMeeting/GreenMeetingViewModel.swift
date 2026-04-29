@@ -49,9 +49,7 @@ final class GreenMeetingViewModel {
     func startMeeting(hours: Int, minutes: Int) async {
         let totalSeconds = TimeInterval((hours * 3600) + (minutes * 60))
 
-        // Outbound leg is half the total time
         let outboundSeconds = totalSeconds / 2
-        // Cap search radius at 2km to stay practical
         let searchRadius = DistanceMeters(value: min(outboundSeconds * walkingSpeed, 2000))
 
         isSearching = true
@@ -68,7 +66,6 @@ final class GreenMeetingViewModel {
                 return
             }
 
-            // Prefer the area closest to the ideal halfway distance
             let idealDistance = searchRadius.value / 2
             foundGreenArea = areas.min(by: { a, b in
                 let distA = abs(currentCoordinate.distance(to: a.coordinate) - idealDistance)

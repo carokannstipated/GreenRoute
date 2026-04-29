@@ -50,6 +50,6 @@ final class RouteMapViewModel {
     }
 
     func openInMaps() {
-        // Passed to View which handles MapKit
+    
     }
 }

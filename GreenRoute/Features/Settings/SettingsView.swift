@@ -51,12 +51,12 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Permissions
 
 private struct PermissionsView: View {
     @State private var viewModel = PermissionsViewModel()
     @State private var showingLocationAlert = false
     @State private var showingNotificationAlert = false
+    @State private var showingMotionAlert = false
 
     var body: some View {
         Form {
@@ -77,6 +77,19 @@ private struct PermissionsView: View {
                     status: viewModel.notificationStatus
                 ) {
                     showingNotificationAlert = true
+                }
+
+                permissionRow(
+                    icon: "figure.walk.motion",
+                    iconColor: .green,
+                    title: "Motion & Fitness",
+                    status: viewModel.motionStatus
+                ) {
+                    if viewModel.motionStatus == "Not Set" {
+                        Task { await viewModel.requestMotionPermission() }
+                    } else {
+                        showingMotionAlert = true
+                    }
                 }
             } header: {
                 Text("Device permissions")
@@ -99,6 +112,12 @@ private struct PermissionsView: View {
         } message: {
             Text("To change notification permissions, go to Settings > GreenRoute > Notifications.")
         }
+        .alert("Motion & Fitness Access", isPresented: $showingMotionAlert) {
+            Button("Open Settings") { viewModel.openSettings() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("To change motion permissions, go to Settings > Privacy & Security > Motion & Fitness > GreenRoute.")
+        }
     }
 
     private func permissionRow(icon: String, iconColor: Color, title: String, status: String, action: @escaping () -> Void) -> some View {
@@ -116,7 +135,6 @@ private struct PermissionsView: View {
     }
 }
 
-// MARK: - Route Preferences
 
 private struct RoutePreferencesView: View {
     var viewModel: SettingsViewModel
@@ -184,7 +202,6 @@ private struct RoutePreferencesView: View {
     }
 }
 
-// MARK: - Address Picker
 
 private struct AddressPickerView: View {
     let current: SavedAddress?
@@ -266,7 +283,6 @@ private struct AddressPickerView: View {
     }
 }
 
-// MARK: - About
 
 private struct AboutView: View {
     var body: some View {
@@ -286,7 +302,6 @@ private struct AboutView: View {
     }
 }
 
-// MARK: - Helpers
 
 private extension View {
     func settingsIcon(systemName: String, color: Color) -> some View {

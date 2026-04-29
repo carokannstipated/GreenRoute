@@ -33,7 +33,6 @@ final class GreenBreakViewModelTests: XCTestCase {
 
         service.emit(.significantLocationChange(latitude: 55.676, longitude: 12.568))
         
-        // Give the async stream time to process the event
         try await Task.sleep(for: .milliseconds(50))
 
         XCTAssertEqual(viewModel.lastKnownCoordinate?.latitude, 55.676)
@@ -45,7 +44,6 @@ final class GreenBreakViewModelTests: XCTestCase {
         provider.stubbedAreas = [makeGreenArea()]
         await viewModel.start()
 
-        // Emit inactivity before any location update
         service.emit(.inactivityDetected(makeInactivityEvent()))
         try await Task.sleep(for: .milliseconds(50))
 
@@ -57,12 +55,10 @@ final class GreenBreakViewModelTests: XCTestCase {
         provider.stubbedAreas = [makeGreenArea(distance: 200)]
         await viewModel.start()
 
-        // Establish location first
         service.emit(.significantLocationChange(latitude: 55.6761, longitude: 12.5683))
         try await Task.sleep(for: .milliseconds(50))
 
         service.emit(.inactivityDetected(makeInactivityEvent(durationMinutes: 25)))
-        // Give async use case time to complete
         try await Task.sleep(for: .milliseconds(100))
 
         XCTAssertNotNil(viewModel.recommendation)
@@ -71,7 +67,6 @@ final class GreenBreakViewModelTests: XCTestCase {
     func test_acceptRecommendation_setsIsShowingMapTrue() async throws {
         let (viewModel, _, _) = makeSUT()
         await viewModel.simulateInactivity()
-        // Wait for recommendation
         try await Task.sleep(for: .milliseconds(100))
 
         viewModel.acceptRecommendation()
@@ -88,7 +83,6 @@ final class GreenBreakViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.recommendation)
     }
 
-    // MARK: - Helpers
 
     private typealias SUT = (
         viewModel: GreenBreakViewModel,
@@ -118,8 +112,6 @@ final class GreenBreakViewModelTests: XCTestCase {
     }
 
     private func makeGreenArea(distance: Double = 200) -> GreenArea {
-        // Offset slightly from the default simulate coordinate (55.6761, 12.5683)
-        // to produce a measurable but short distance
         GreenArea(
             id: "park-1",
             name: "Fælledparken",
