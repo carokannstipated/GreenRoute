@@ -1,6 +1,11 @@
+// Main home screen for the Green Break feature. Shows idle state, an active recommendation
+// card, or a "no results" state with controls to retry. Also hosts the route map sheet.
+
 import SwiftUI
 import GreenRouteDomain
 
+/// The primary view for the Green Break tab.
+/// Starts and stops the service through its view model via the .task lifecycle modifier.
 struct GreenBreakView: View {
 
     @State private var viewModel: GreenBreakViewModel
@@ -12,18 +17,24 @@ struct GreenBreakView: View {
     var body: some View {
         ZStack(alignment: .top) {
             background
+
+            // Session pill appears at the top when the user is walking but has minimised the map sheet.
             if viewModel.isWalking && !viewModel.isShowingMap {
                 sessionPill
             }
+
             VStack {
                 Spacer()
+
                 if let recommendation = viewModel.recommendation, !viewModel.isWalking {
+                    // A recommendation is ready and the user hasn't started walking yet.
                     RecommendationCard(
                         recommendation: recommendation,
                         onAccept: { viewModel.acceptRecommendation() },
                         onDismiss: { viewModel.dismissRecommendation() }
                     )
                 } else if viewModel.noResultsNearby {
+                    // A manual search completed but found nothing — offer a duration adjustment and retry.
                     noResultsView
                     Spacer().frame(maxHeight: 24)
                     durationStepper
@@ -38,6 +49,7 @@ struct GreenBreakView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
                 } else if viewModel.recommendation == nil {
+                    // Idle state — app is monitoring in the background, nothing to show yet.
                     idleView
                     Spacer().frame(maxHeight: 90)
                     Button {
@@ -50,18 +62,20 @@ struct GreenBreakView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
                 }
+
                 Spacer()
             }
             .padding()
-
         }
         .onAppear { viewModel.reloadSettings() }
+        // The .task modifier ties the service lifecycle to the view's lifetime.
+        // The sleep after start() keeps the task alive indefinitely so service events
+        // keep flowing; it is cancelled when the view disappears, which calls stop().
         .task {
             await viewModel.start()
             do {
                 try await Task.sleep(for: .seconds(86400 * 365 * 100))
             } catch {
-                
             }
             await viewModel.stop()
         }
@@ -91,6 +105,7 @@ struct GreenBreakView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     #if DEBUG
+                    // Debug shortcut to test the inactivity → recommendation flow without waiting.
                     Button {
                         Task { await viewModel.simulateInactivity() }
                     } label: {
@@ -104,6 +119,8 @@ struct GreenBreakView: View {
         }
     }
 
+    /// Floating pill shown at the top of the screen when a walk is active but the map sheet is closed.
+    /// Tapping the left side re-opens the sheet; the X button ends the session.
     private var sessionPill: some View {
         HStack(spacing: 12) {
             Button { viewModel.resumeSession() } label: {
@@ -137,6 +154,8 @@ struct GreenBreakView: View {
         .ignoresSafeArea()
     }
 
+    /// Inline stepper that lets the user adjust the max route duration during the no-results state
+    /// without navigating to Settings.
     private var durationStepper: some View {
         HStack {
             Text("Max duration")
@@ -157,6 +176,7 @@ struct GreenBreakView: View {
         .padding(.horizontal, 4)
     }
 
+    /// Displayed when a manual search found no green areas within the current range.
     private var noResultsView: some View {
         VStack(spacing: 20) {
             Image(systemName: "leaf.fill")
@@ -173,6 +193,7 @@ struct GreenBreakView: View {
         }
     }
 
+    /// Displayed when the app is monitoring in the background and no recommendation is active.
     private var idleView: some View {
         VStack(spacing: 20) {
             Image(systemName: "leaf.fill")
