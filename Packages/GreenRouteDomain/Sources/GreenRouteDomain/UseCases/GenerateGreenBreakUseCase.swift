@@ -1,16 +1,24 @@
-//
-//  GenerateGreenBreakUseCase.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Orchestrates the full pipeline from inactivity detection to green-break notification delivery.
 
 import Foundation
 
+/// Coordinates green-area lookup, recommendation generation, persistence, and notification scheduling.
+///
+/// This is the primary entry point for the recommendation flow. It chains five collaborators:
+/// `GreenAreaProvider` → `RecommendationEngine` → `RecommendationRepository` →
+/// `NotificationPolicy` → `NotificationScheduler`.
+///
+/// A recommendation is always saved to the repository if the engine produces one, regardless
+/// of whether a notification is ultimately sent.
 public struct GenerateGreenBreakUseCase: Sendable {
 
+    /// The result of a single execution, returned whether or not a notification was sent.
     public struct Output: Equatable, Sendable {
+
+        /// The recommendation produced by the engine, or `nil` if the engine rejected the input.
         public let recommendation: Recommendation?
+
+        /// `true` only when a `NotificationRequest` was successfully handed to the scheduler.
         public let didScheduleNotification: Bool
 
         public init(recommendation: Recommendation?, didScheduleNotification: Bool) {
@@ -39,9 +47,20 @@ public struct GenerateGreenBreakUseCase: Sendable {
         self.notificationScheduler = notificationScheduler
     }
 
-    // Evaluates context and creates a green-break recommendation if rules match.
-    //
-    // Scheduling a notification is optional and guarded by NotificationPolicy.
+    /// Runs the recommendation pipeline for the given inactivity event.
+    ///
+    /// - Parameters:
+    ///   - inactivity: The inactivity event that triggered this evaluation.
+    ///   - currentCoordinate: The user's current location.
+    ///   - inactivityThresholdMinutes: Minimum inactivity length before a recommendation is considered.
+    ///   - maxDistance: Upper distance bound for the recommended green area.
+    ///   - searchRadius: Radius passed to `GreenAreaProvider.fetchGreenAreas`.
+    ///   - sentCountToday: Notification count already sent today, forwarded to `NotificationPolicy`.
+    ///   - lastNotificationSentAt: Timestamp of the last sent notification, forwarded to `NotificationPolicy`.
+    ///   - shouldScheduleNotification: When `false`, skips scheduling entirely (e.g. notification
+    ///     permission not granted, or called from a background context without permission).
+    ///   - now: The current time; used as `createdAt` for the recommendation and for policy checks.
+    ///   - trigger: What initiated this call; defaults to `.inactivity`.
     public func execute(
         inactivity: InactivityEvent,
         currentCoordinate: Coordinate,
@@ -55,7 +74,6 @@ public struct GenerateGreenBreakUseCase: Sendable {
         trigger: Recommendation.Trigger = .inactivity
     ) async throws -> Output {
 
-        // 1) Fetch nearby green areas (Platform implementation will do MapKit/POI)
         let areas = try await greenAreaProvider.fetchGreenAreas(
             near: currentCoordinate,
             radius: searchRadius
@@ -65,7 +83,6 @@ public struct GenerateGreenBreakUseCase: Sendable {
         print("🟡 fetchGreenAreas returned \(areas.count) areas near \(currentCoordinate)")
         #endif
 
-        // 2) Generate recommendation (rule-based engine)
         guard let recommendation = recommendationEngine.generateRecommendation(
             inactivity: inactivity,
             currentCoordinate: currentCoordinate,
@@ -78,10 +95,9 @@ public struct GenerateGreenBreakUseCase: Sendable {
             return Output(recommendation: nil, didScheduleNotification: false)
         }
 
-        // 3) Persist recommendation
+        // Always persist the recommendation, even if we end up not sending a notification.
         try await recommendationRepository.save(recommendation)
-        
-        // 4) Optionally schedule notification (anti-spam policy)
+
         guard shouldScheduleNotification else {
             return Output(recommendation: recommendation, didScheduleNotification: false)
         }
@@ -96,6 +112,8 @@ public struct GenerateGreenBreakUseCase: Sendable {
             return Output(recommendation: recommendation, didScheduleNotification: false)
         }
 
+        // `fireAt` is 1 second in the future rather than exactly `now` because
+        // `UNNotificationCenter` rejects requests with a trigger time in the past.
         let request = NotificationRequest(
             id: "greenroute.reco.\(recommendation.id.uuidString)",
             title: "Green break?",

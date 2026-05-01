@@ -1,14 +1,15 @@
-//
-//  SwiftDataRecommendationRepository.swift
-//  GreenRouteData
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+
+// SwiftData-backed implementation of RecommendationRepository.
 
 import Foundation
 import SwiftData
 import GreenRouteDomain
 
+/// Persists and retrieves `Recommendation` domain models using SwiftData.
+///
+/// Each method creates its own `ModelContext` so the repository is safe to call from
+/// any async context. Marked `@unchecked Sendable` because `ModelContainer` is thread-safe
+/// but not formally `Sendable` in this version of SwiftData.
 public final class SwiftDataRecommendationRepository: RecommendationRepository, @unchecked Sendable {
 
     private let container: ModelContainer
@@ -24,6 +25,7 @@ public final class SwiftDataRecommendationRepository: RecommendationRepository, 
         try context.save()
     }
 
+    /// Returns recommendations whose `createdAt` falls within [start, end), sorted most-recent first.
     public func fetch(from start: Date, to end: Date) async throws -> [Recommendation] {
         let context = ModelContext(container)
         let descriptor = FetchDescriptor<RecommendationEntity>(

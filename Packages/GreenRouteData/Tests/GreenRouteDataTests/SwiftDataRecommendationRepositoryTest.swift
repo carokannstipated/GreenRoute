@@ -1,9 +1,5 @@
-//
-//  SwiftDataRecommendationRepositoryTest.swift
-//  GreenRouteData
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+
+// Integration test for SwiftDataRecommendationRepository against an in-memory SwiftData store.
 
 import XCTest
 import SwiftData
@@ -12,6 +8,9 @@ import GreenRouteDomain
 
 final class SwiftDataRecommendationRepositoryTests: XCTestCase {
 
+    /// Saves a recommendation with a denormalised GreenArea target and fetches it back.
+    /// Verifies that all fields — including the nested target coordinate and kind — survive
+    /// the full entity serialisation round-trip.
     func test_saveAndFetch_roundTripsRecommendation() async throws {
         let container = try ModelContainerFactory.makeInMemoryContainer()
         let repo = SwiftDataRecommendationRepository(container: container)

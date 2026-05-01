@@ -1,27 +1,28 @@
-//
-//  CoreLocationClient.swift
-//  GreenRouteService
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
+// Production CLLocationManager adapter that bridges delegate callbacks into
+// the closure-based LocationClient protocol.
 
 import Foundation
 import CoreLocation
 
+/// `NSObject` subclass required to conform to `CLLocationManagerDelegate`.
+/// Converts delegate calls into invocations of the stored `handler` closure.
 final class CoreLocationClient: NSObject, LocationClient {
 
     private let manager = CLLocationManager()
+
+    /// Stored closure invoked on each location update; retained here because
+    /// `CLLocationManager` holds only a weak delegate reference.
     private var handler: (@Sendable (LocationUpdate) -> Void)?
 
     override init() {
         super.init()
         manager.delegate = self
     }
-    
+
     func requestLocation() {
         manager.requestLocation()
     }
-    
+
     func requestWhenInUsePermission() {
         manager.requestAlwaysAuthorization()
     }
@@ -38,6 +39,7 @@ final class CoreLocationClient: NSObject, LocationClient {
 }
 
 extension CoreLocationClient: CLLocationManagerDelegate {
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         handler?(LocationUpdate(
@@ -46,8 +48,8 @@ extension CoreLocationClient: CLLocationManagerDelegate {
         ))
     }
 
+    /// Significant-location-change failures are non-fatal in the current implementation.
+    /// Errors are intentionally not surfaced; telemetry integration is deferred.
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Surface to logging/telemetry in a future iteration.
-        // Silently ignored in MVP — significant location change failures are non-fatal.
     }
 }

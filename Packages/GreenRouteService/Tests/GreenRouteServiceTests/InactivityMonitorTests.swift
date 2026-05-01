@@ -1,15 +1,16 @@
-//
-//  InactivityMonitorTests.swift
-//  GreenRouteService
-//
-//  Created by Freja Egelund Grønnemose on 03/03/2026.
-//
+// Unit tests for InactivityMonitor.handleActivities(_:windowStart:windowEnd:).
+// Tests cover emission correctness, non-emission on movement, empty-input handling,
+// and the deduplication logic that prevents back-to-back events within the threshold.
 
 import XCTest
 @testable import GreenRouteService
 
 final class InactivityMonitorTests: XCTestCase {
 
+    // MARK: - Event emission
+
+    /// Verifies that a window containing only stationary activities causes exactly one
+    /// `inactivityDetected` event with the correct start and end timestamps.
     func test_handleActivities_allStationary_emitsEvent() async throws {
         let emitted = EventCollector()
         let monitor = makeMonitor { event in Task { await emitted.append(event) } }
@@ -30,6 +31,8 @@ final class InactivityMonitorTests: XCTestCase {
         XCTAssertEqual(event.end, windowEnd)
     }
 
+    /// Verifies that a window containing at least one moving activity produces no event,
+    /// even when other activities in the same window are stationary.
     func test_handleActivities_hasMovingActivity_doesNotEmit() async throws {
         let emitted = EventCollector()
         let monitor = makeMonitor { event in Task { await emitted.append(event) } }
@@ -42,6 +45,8 @@ final class InactivityMonitorTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
 
+    /// Verifies that an empty activity array produces no event, since no data cannot
+    /// be interpreted as confirmed stationary behaviour.
     func test_handleActivities_emptyActivities_doesNotEmit() async throws {
         let emitted = EventCollector()
         let monitor = makeMonitor { event in Task { await emitted.append(event) } }
@@ -53,6 +58,12 @@ final class InactivityMonitorTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
 
+    // MARK: - Deduplication
+
+    /// Verifies that a second stationary window whose end timestamp falls within
+    /// `inactivityThreshold` of the first emission does not produce a second event.
+    /// This prevents the monitor from flooding the system with repeated inactivity alerts
+    /// for the same sedentary period.
     func test_handleActivities_doesNotEmitDuplicateWithinThreshold() async throws {
         let emitted = EventCollector()
         let monitor = makeMonitor(threshold: 60 * 60) { event in Task { await emitted.append(event) } }
@@ -67,13 +78,15 @@ final class InactivityMonitorTests: XCTestCase {
         let firstCount = await emitted.count
         XCTAssertEqual(firstCount, 1)
 
-        // 40 min after first window end — still within 60 min threshold
+        // Second window ends only 40 min after first — still within the 60 min threshold.
         await monitor.handleActivities(activities, windowStart: t20, windowEnd: t40)
         try await Task.sleep(for: .milliseconds(20))
         let secondCount = await emitted.count
         XCTAssertEqual(secondCount, 1)
     }
 
+    /// Verifies that a second stationary window whose end falls beyond `inactivityThreshold`
+    /// after the first emission does produce a new event, confirming deduplication resets correctly.
     func test_handleActivities_emitsAgainAfterThreshold() async throws {
         let emitted = EventCollector()
         let monitor = makeMonitor(threshold: 30 * 60) { event in Task { await emitted.append(event) } }
@@ -89,7 +102,7 @@ final class InactivityMonitorTests: XCTestCase {
         let firstCount = await emitted.count
         XCTAssertEqual(firstCount, 1)
 
-        // 40 min gap since last window end — exceeds 30 min threshold
+        // Second window ends 60 min after the first — exceeds the 30 min threshold.
         await monitor.handleActivities(activities, windowStart: t60, windowEnd: t80)
         try await Task.sleep(for: .milliseconds(20))
         let secondCount = await emitted.count
@@ -111,6 +124,7 @@ final class InactivityMonitorTests: XCTestCase {
     }
 }
 
+/// Thread-safe event collector used across test suites to accumulate emitted `ServiceEvent` values.
 actor EventCollector {
     private(set) var events: [ServiceEvent] = []
     var count: Int { events.count }

@@ -1,15 +1,13 @@
-//
-//  LocationVisitMapper.swift
-//  GreenRouteData
-//
-//  Created by David Rivera on 03/03/2026.
-//
+// Bidirectional mapper between the LocationVisit domain model and its SwiftData entity.
 
 import Foundation
 import GreenRouteDomain
 
+/// Translates `LocationVisit` ↔ `LocationVisitEntity`, handling coordinate flattening
+/// and `PlaceCategory` raw-string encoding.
 enum LocationVisitMapper {
-    
+
+    /// Converts a domain `LocationVisit` to a SwiftData entity ready for insertion.
     static func toEntity(_ model: LocationVisit) -> LocationVisitEntity {
         LocationVisitEntity(
             id: model.id,
@@ -21,6 +19,8 @@ enum LocationVisitMapper {
         )
     }
 
+    /// Reconstructs a `LocationVisit` domain model from a persisted entity,
+    /// reassembling the `Coordinate` from flat latitude/longitude fields.
     static func toDomain(_ entity: LocationVisitEntity) -> LocationVisit {
         LocationVisit(
             id: entity.id,
@@ -33,10 +33,8 @@ enum LocationVisitMapper {
             placeCategory: entity.placeCategoryRaw.map(placeCategoryFromRaw)
         )
     }
-    
-    
-    // MARK: - Raw Mapping
 
+    /// Encodes a `PlaceCategory` to its canonical string representation.
     private static func placeCategoryRaw(_ category: PlaceCategory) -> String {
         switch category {
         case .home: return "home"
@@ -44,7 +42,8 @@ enum LocationVisitMapper {
         case .other: return "other"
         }
     }
-    
+
+    /// Decodes a raw string to a `PlaceCategory`. Any unrecognised value maps to `.other`.
     private static func placeCategoryFromRaw(_ raw: String) -> PlaceCategory {
             switch raw {
             case "home": return .home

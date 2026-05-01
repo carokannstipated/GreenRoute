@@ -1,26 +1,25 @@
-//
-//  DetectRecurringPatternTest.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Tests for DetectRecurringPatternUseCase — verifies detection, persistence, and date-range scoping.
 
 import XCTest
 @testable import GreenRouteDomain
 
 final class DetectRecurringPatternUseCaseTests: XCTestCase {
 
+    /// UTC calendar so ISO-8601 timestamps in event fixtures map directly to expected hours/minutes.
     private var calendarUTC: Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(secondsFromGMT: 0)!
         return cal
     }
 
+    // MARK: - Successful pattern detection
+
+    /// Three events clustered around 13:00 UTC should produce a pattern that is both returned
+    /// and saved exactly once to the pattern repository.
     func test_execute_savesAndReturnsPattern_whenDetectorFindsOne() async throws {
         let cal = calendarUTC
         let now = iso("2026-02-06T12:00:00Z")
 
-        // 3 events around 13:00 across several days (within last 5 days)
         let events: [InactivityEvent] = [
             makeEvent(start: "2026-02-02T12:55:00Z", durationMinutes: 30),
             makeEvent(start: "2026-02-03T13:05:00Z", durationMinutes: 25),
@@ -55,11 +54,14 @@ final class DetectRecurringPatternUseCaseTests: XCTestCase {
         XCTAssertTrue(unwrapped.window.contains(minutesFromMidnight: 13 * 60))
     }
 
+    // MARK: - No pattern found
+
+    /// Scattered event times (09:00, 13:00, 18:00) produce no pattern — use case must
+    /// return nil and must not write anything to the pattern repository.
     func test_execute_returnsNil_whenNoPatternFound() async throws {
         let cal = calendarUTC
         let now = iso("2026-02-06T12:00:00Z")
 
-        // Scattered times => no stable pattern
         let events: [InactivityEvent] = [
             makeEvent(start: "2026-02-02T09:00:00Z", durationMinutes: 30),
             makeEvent(start: "2026-02-03T13:00:00Z", durationMinutes: 25),
@@ -89,11 +91,14 @@ final class DetectRecurringPatternUseCaseTests: XCTestCase {
         XCTAssertEqual(saved.count, 0)
     }
 
+    // MARK: - Lookback range scoping
+
+    /// An event from two weeks ago (outside the 5-day lookback window) must not be passed
+    /// to the detector. The test verifies the query bounds rather than the detection outcome.
     func test_execute_onlyUsesEventsWithinLookbackRange() async throws {
         let cal = calendarUTC
         let now = iso("2026-02-06T12:00:00Z")
 
-        // One old event outside 5-day lookback + 3 in-range matching events
         let old = makeEvent(start: "2026-01-20T13:00:00Z", durationMinutes: 30)
         let inRange: [InactivityEvent] = [
             makeEvent(start: "2026-02-02T13:00:00Z", durationMinutes: 30),
@@ -118,29 +123,29 @@ final class DetectRecurringPatternUseCaseTests: XCTestCase {
             calendar: cal
         )
 
-        // Verify fetch range was applied (repository records last query)
         let lastQuery = await inactivityRepo.lastQuery()
         XCTAssertNotNil(lastQuery)
         XCTAssertEqual(lastQuery?.end, now)
 
-        // start should be now - 5 days (calendar-based), we just sanity check it's close and before end
+        // The start of the query must be before `now` (i.e. 5 days back).
         XCTAssertTrue((lastQuery?.start ?? now) < now)
     }
 }
 
-// MARK: - Fakes
+// MARK: - Test doubles
 
+/// In-memory inactivity repository that records the most recent fetch query bounds.
 private actor FakeInactivityEventRepository: InactivityEventRepository {
     private let events: [InactivityEvent]
+
+    /// Records the date range passed to the most recent `fetch` call.
     private var query: (start: Date, end: Date)?
 
     init(events: [InactivityEvent]) {
         self.events = events
     }
 
-    func save(_ event: InactivityEvent) async throws {
-        // Not needed for these tests
-    }
+    func save(_ event: InactivityEvent) async throws {}
 
     func fetch(from start: Date, to end: Date) async throws -> [InactivityEvent] {
         query = (start: start, end: end)
@@ -150,6 +155,7 @@ private actor FakeInactivityEventRepository: InactivityEventRepository {
     func lastQuery() -> (start: Date, end: Date)? { query }
 }
 
+/// In-memory pattern repository that accumulates every saved pattern.
 private actor FakeRecurringPatternRepository: RecurringPatternRepository {
     private var saved: [RecurringPattern] = []
 

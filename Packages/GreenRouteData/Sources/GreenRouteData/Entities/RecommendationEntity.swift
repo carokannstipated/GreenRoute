@@ -1,29 +1,31 @@
-//
-//  RecommendationEntity.swift
-//  GreenRouteData
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// SwiftData entity for persisting a Recommendation domain model.
 
 import Foundation
 import SwiftData
 
+/// Persistent storage representation of a `Recommendation`.
+///
+/// The recommended `GreenArea` (the `target`) is denormalised into flat scalar fields
+/// (`targetId`, `targetName`, `targetLat`, `targetLon`, `targetKindRaw`) because SwiftData
+/// cannot store an arbitrary nested model type inline. `RecommendationMapper` reconstructs
+/// the `GreenArea` value on read.
 @Model
 public final class RecommendationEntity {
+    /// Unique identifier. The `.unique` attribute enforces upsert semantics.
     @Attribute(.unique) public var id: UUID
     public var createdAt: Date
 
-    // Trigger
+    /// Raw string representation of `Recommendation.Trigger` (e.g. "inactivity", "pattern").
     public var triggerRaw: String
 
-    // Target (GreenArea snapshot)
+    /// Denormalised fields for the recommended green area.
     public var targetId: String
     public var targetName: String
     public var targetLat: Double
     public var targetLon: Double
+    /// Raw string representation of `GreenArea.Kind` for the target area.
     public var targetKindRaw: String
 
-    // Snapshot metrics
     public var distanceMeters: Double
     public var estimatedWalkMinutes: Int
 

@@ -1,15 +1,12 @@
-//
-//  RecordInactivityUseCaseTest.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Tests for RecordInactivityEventUseCase — verifies that executing the use case persists the event.
 
 import XCTest
 @testable import GreenRouteDomain
 
 final class RecordInactivityEventUseCaseTests: XCTestCase {
 
+    /// Calling `execute` with a valid event must result in exactly that event being stored
+    /// in the repository, with identity preserved.
     func test_execute_savesEvent() async throws {
         let repo = FakeInactivityEventRepository()
         let useCase = RecordInactivityEventUseCase(repository: repo)
@@ -27,8 +24,9 @@ final class RecordInactivityEventUseCaseTests: XCTestCase {
     }
 }
 
-// MARK: - Fake
+// MARK: - Test doubles
 
+/// In-memory inactivity repository that accumulates every saved event.
 private actor FakeInactivityEventRepository: InactivityEventRepository {
     private var saved: [InactivityEvent] = []
 
@@ -43,7 +41,7 @@ private actor FakeInactivityEventRepository: InactivityEventRepository {
     func allSaved() -> [InactivityEvent] { saved }
 }
 
-// MARK: - Helper
+// MARK: - Helpers
 
 private func iso(_ value: String) -> Date {
     ISO8601DateFormatter().date(from: value)!

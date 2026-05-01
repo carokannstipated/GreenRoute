@@ -1,25 +1,27 @@
-//
-//  MKLocalSearching.swift
-//  GreenRouteService
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
+// MapKit-backed implementation of LocalSearching that queries parks, beaches,
+// and national parks near a given coordinate.
 
 import Foundation
 import MapKit
 import GreenRouteDomain
 
+/// Performs `MKLocalSearch` requests filtered to green/natural POI categories.
 final class MKLocalSearcher: LocalSearching, Sendable {
 
+    /// The subset of MapKit POI categories considered "green" spaces for this app.
     private static let greenCategories: [MKPointOfInterestCategory] = [
         .park, .beach, .nationalPark
     ]
 
+    /// Searches MapKit for green-space POIs near the given coordinate.
+    /// The search region is a square with side length `radius * 2` centred on `coordinate`.
+    /// Results with no name are silently discarded.
     func search(near coordinate: Coordinate, radius: DistanceMeters) async throws -> [LocalSearchResult] {
         let center = CLLocationCoordinate2D(
             latitude: coordinate.latitude,
             longitude: coordinate.longitude
         )
+        // Build a region whose diameter equals the requested radius in both axes.
         let region = MKCoordinateRegion(
             center: center,
             latitudinalMeters: radius.value * 2,

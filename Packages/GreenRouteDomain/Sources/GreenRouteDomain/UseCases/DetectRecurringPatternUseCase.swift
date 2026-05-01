@@ -1,12 +1,9 @@
-//
-//  DetectRecurringPatternUseCase.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Fetches recent inactivity history and runs the pattern detector.
 
 import Foundation
 
+/// Queries historical inactivity events and delegates to `PatternDetector` to find
+/// a recurring daily pattern. Persists any detected pattern to the repository.
 public struct DetectRecurringPatternUseCase: Sendable {
 
     private let inactivityRepository: InactivityEventRepository
@@ -23,16 +20,16 @@ public struct DetectRecurringPatternUseCase: Sendable {
         self.detector = detector
     }
 
-    // Detects a recurring daily time pattern from the last N days of inactivity events.
-    //
-    // - Parameters:
-    //   - now: Current time (inject for deterministic testing).
-    //   - lookbackDays: How many days to look back (MVP: 5).
-    //   - toleranceMinutes: ± window around the central time (MVP: 30).
-    //   - minimumEvidence: Minimum matching observations (MVP: 3).
-    //   - calendar: Explicit calendar (no `.current` in domain).
-    //
-    // - Returns: Detected pattern if any, and persists it.
+    /// Looks back over recent inactivity events and returns a pattern if one is found.
+    ///
+    /// - Parameters:
+    ///   - now: The reference point in time; the lookback window ends here.
+    ///   - lookbackDays: How many days of history to examine. Must be > 0.
+    ///   - toleranceMinutes: Tolerance passed to `PatternDetector`; how far from the
+    ///     average start time an event may fall and still count as matching.
+    ///   - minimumEvidence: Minimum matching events required; forwarded to `PatternDetector`.
+    ///   - calendar: Calendar used for date arithmetic and component extraction.
+    /// - Returns: The detected `RecurringPattern` (already saved), or `nil` if none found.
     public func execute(
         now: Date,
         lookbackDays: Int = 5,
@@ -43,6 +40,8 @@ public struct DetectRecurringPatternUseCase: Sendable {
 
         precondition(lookbackDays > 0, "lookbackDays must be > 0")
 
+        // The `?? now` fallback is defensive; calendar subtraction only fails if the
+        // date would overflow, which is impossible for a small number of days.
         let start = calendar.date(byAdding: .day, value: -lookbackDays, to: now) ?? now
         let end = now
 

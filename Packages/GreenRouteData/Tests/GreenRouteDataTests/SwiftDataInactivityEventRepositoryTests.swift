@@ -1,21 +1,18 @@
-//
-//  SwiftDataInactivityEventRepositoryTests.swift
-//  GreenRouteData
-//
-//  Created by David Rivera on 18/03/2026.
-//
 
+
+// Integration tests for SwiftDataInactivityEventRepository against an in-memory SwiftData store.
 
 import XCTest
 import SwiftData
 @testable import GreenRouteData
 @testable import GreenRouteDomain
- 
+
 final class SwiftDataInactivityEventRepositoryTests: XCTestCase {
- 
+
     private var container: ModelContainer!
     private var repository: SwiftDataInactivityEventRepository!
- 
+
+    /// Creates a fresh in-memory container before each test to ensure isolation.
     override func setUpWithError() throws {
         let schema = Schema([
             InactivityEventEntity.self
@@ -24,37 +21,44 @@ final class SwiftDataInactivityEventRepositoryTests: XCTestCase {
         container = try ModelContainer(for: schema, configurations: config)
         repository = SwiftDataInactivityEventRepository(container: container)
     }
- 
+
     override func tearDownWithError() throws {
         container = nil
         repository = nil
     }
- 
+
+    // MARK: - Empty store
+
+    /// An empty store must return an empty array for any date range.
     func test_fetchEmpty_returnsNoEvents() async throws {
         let now = Date()
         let fetched = try await repository.fetch(from: now.addingTimeInterval(-3600), to: now)
         XCTAssertTrue(fetched.isEmpty, "Expected no events in an empty store.")
     }
- 
+
+    // MARK: - Save and fetch round-trip
+
+    /// Saving an event and fetching it back must preserve id, start, and end exactly.
     func test_saveAndFetch_returnsEvent() async throws {
         let now = Date()
         let event = InactivityEvent(
             start: now.addingTimeInterval(-1800),
             end: now
         )
- 
+
         try await repository.save(event)
         let fetched = try await repository.fetch(
             from: now.addingTimeInterval(-3600),
             to: now.addingTimeInterval(1)
         )
- 
+
         XCTAssertEqual(fetched.count, 1)
         XCTAssertEqual(fetched.first?.id, event.id)
         XCTAssertEqual(fetched.first?.start, event.start)
         XCTAssertEqual(fetched.first?.end, event.end)
     }
- 
+
+    /// Saving three events and fetching with a range that covers all of them must return all three.
     func test_saveMultiple_fetchAllReturnsAll() async throws {
         let now = Date()
         let e1 = InactivityEvent(
@@ -69,23 +73,26 @@ final class SwiftDataInactivityEventRepositoryTests: XCTestCase {
             start: now.addingTimeInterval(-1800),
             end: now.addingTimeInterval(-900)
         )
- 
+
         try await repository.save(e1)
         try await repository.save(e2)
         try await repository.save(e3)
- 
+
         let fetched = try await repository.fetch(
             from: now.addingTimeInterval(-7200),
             to: now
         )
- 
+
         XCTAssertEqual(fetched.count, 3)
         let ids = Set(fetched.map { $0.id })
         XCTAssertTrue(ids.contains(e1.id))
         XCTAssertTrue(ids.contains(e2.id))
         XCTAssertTrue(ids.contains(e3.id))
     }
- 
+
+    // MARK: - Date-range filtering
+
+    /// An event whose start is outside the fetch window must not appear in the results.
     func test_fetch_excludesEventsOutsideRange() async throws {
         let now = Date()
         let inside = InactivityEvent(
@@ -96,19 +103,22 @@ final class SwiftDataInactivityEventRepositoryTests: XCTestCase {
             start: now.addingTimeInterval(-7200),
             end: now.addingTimeInterval(-5400)
         )
- 
+
         try await repository.save(inside)
         try await repository.save(outside)
- 
+
         let fetched = try await repository.fetch(
             from: now.addingTimeInterval(-3600),
             to: now
         )
- 
+
         XCTAssertEqual(fetched.count, 1)
         XCTAssertEqual(fetched.first?.id, inside.id)
     }
- 
+
+    // MARK: - Sort order
+
+    /// Results must be ordered by start descending — the most recent event comes first.
     func test_fetch_resultsAreSortedByStartDescending() async throws {
         let now = Date()
         let early = InactivityEvent(
@@ -119,15 +129,15 @@ final class SwiftDataInactivityEventRepositoryTests: XCTestCase {
             start: now.addingTimeInterval(-1800),
             end: now.addingTimeInterval(-900)
         )
- 
+
         try await repository.save(early)
         try await repository.save(late)
- 
+
         let fetched = try await repository.fetch(
             from: now.addingTimeInterval(-7200),
             to: now
         )
- 
+
         XCTAssertEqual(fetched.first?.id, late.id)
         XCTAssertEqual(fetched.last?.id, early.id)
     }

@@ -1,15 +1,14 @@
-//
-//  RecommendationMapper.swift
-//  GreenRouteData
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Bidirectional mapper between the Recommendation domain model and its SwiftData entity.
 
 import Foundation
 import GreenRouteDomain
 
+/// Translates `Recommendation` ↔ `RecommendationEntity`, denormalising the embedded
+/// `GreenArea` target into flat entity fields and encoding enums as raw strings.
 enum RecommendationMapper {
 
+    /// Converts a domain `Recommendation` to a SwiftData entity.
+    /// The target `GreenArea` is spread across the flat `target*` entity fields.
     static func toEntity(_ model: Recommendation) -> RecommendationEntity {
         RecommendationEntity(
             id: model.id,
@@ -25,6 +24,8 @@ enum RecommendationMapper {
         )
     }
 
+    /// Reconstructs a `Recommendation` domain model from a persisted entity,
+    /// reassembling the nested `GreenArea` from the flat target fields.
     static func toDomain(_ entity: RecommendationEntity) -> Recommendation {
         let target = GreenArea(
             id: entity.targetId,
@@ -43,8 +44,7 @@ enum RecommendationMapper {
         )
     }
 
-    // MARK: - Raw mapping
-
+    /// Encodes a `Trigger` to its canonical string representation.
     private static func triggerRaw(_ trigger: Recommendation.Trigger) -> String {
         switch trigger {
         case .userRequested: return "userRequested"
@@ -53,6 +53,8 @@ enum RecommendationMapper {
         }
     }
 
+    /// Decodes a raw string to a `Trigger`. "pattern" is mapped explicitly;
+    /// "userRequested" and any unrecognised value fall back to `.inactivity`.
     private static func triggerFromRaw(_ raw: String) -> Recommendation.Trigger {
         switch raw {
         case "pattern": return .pattern
@@ -60,6 +62,7 @@ enum RecommendationMapper {
         }
     }
 
+    /// Encodes a `GreenArea.Kind` for the target field.
     private static func targetKindRaw(_ kind: GreenArea.Kind) -> String {
         switch kind {
         case .park: return "park"
@@ -70,6 +73,7 @@ enum RecommendationMapper {
         }
     }
 
+    /// Decodes a raw string to a `GreenArea.Kind`. Any unrecognised value maps to `.other`.
     private static func kindFromRaw(_ raw: String) -> GreenArea.Kind {
         switch raw {
         case "park": return .park

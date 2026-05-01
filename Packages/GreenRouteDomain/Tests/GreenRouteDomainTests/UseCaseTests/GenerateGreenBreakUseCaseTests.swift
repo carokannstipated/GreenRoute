@@ -1,24 +1,20 @@
-//
-//  GenerateGreenBreakUseCaseTests.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
-
-import XCTest
-@testable import GreenRouteDomain
+// Tests for GenerateGreenBreakUseCase — verifies the full recommendation and notification pipeline.
 
 import XCTest
 @testable import GreenRouteDomain
 
 final class GenerateGreenBreakUseCaseTests: XCTestCase {
 
+    // MARK: - Full happy path
+
+    /// When all conditions are met (inactivity threshold, nearby park, policy allows),
+    /// the use case must save the recommendation AND schedule the notification.
     func test_execute_generatesAndSavesRecommendation_andSchedulesNotification_whenAllowed() async throws {
         let provider = FakeGreenAreaProvider(areas: [
             GreenArea(
                 id: "park-1",
                 name: "Nearby Park",
-                coordinate: Coordinate(latitude: 55.6761, longitude: 12.5683), // same as current => distance 0
+                coordinate: Coordinate(latitude: 55.6761, longitude: 12.5683),
                 kind: .park
             )
         ])
@@ -40,6 +36,7 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
             end: iso("2026-02-01T12:35:00Z")
         )
 
+        // Park coordinate matches current position, so distance == 0 and the engine accepts it.
         let current = Coordinate(latitude: 55.6761, longitude: 12.5683)
 
         let output = try await useCase.execute(
@@ -62,11 +59,16 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
 
         XCTAssertTrue(output.didScheduleNotification)
 
+        // The notification ID must contain the recommendation UUID so it can be cancelled later.
         let scheduled = await scheduler.allScheduled()
         XCTAssertEqual(scheduled.count, 1)
         XCTAssertTrue(scheduled[0].id.contains(reco.id.uuidString))
     }
 
+    // MARK: - Policy blocks notification
+
+    /// When the daily cap is already reached (sentCountToday == maxPerDay), the recommendation
+    /// must still be saved but no notification should be scheduled.
     func test_execute_generatesAndSavesRecommendation_butDoesNotSchedule_whenPolicyBlocks() async throws {
         let provider = FakeGreenAreaProvider(areas: [
             GreenArea(
@@ -80,7 +82,6 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
         let repo = FakeRecommendationRepository()
         let scheduler = FakeNotificationScheduler()
 
-        // maxPerDay = 1, and sentCountToday = 1 => blocked
         let useCase = GenerateGreenBreakUseCase(
             greenAreaProvider: provider,
             recommendationEngine: RecommendationEngine(),
@@ -97,6 +98,7 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
 
         let current = Coordinate(latitude: 55.6761, longitude: 12.5683)
 
+        // sentCountToday: 1 == maxPerDay: 1, so the policy must block.
         let output = try await useCase.execute(
             inactivity: inactivity,
             currentCoordinate: current,
@@ -121,8 +123,9 @@ final class GenerateGreenBreakUseCaseTests: XCTestCase {
     }
 }
 
-// MARK: - Fakes
+// MARK: - Test doubles
 
+/// Returns a fixed list of green areas regardless of the requested coordinate or radius.
 private struct FakeGreenAreaProvider: GreenAreaProvider {
     let areas: [GreenArea]
     func fetchGreenAreas(near coordinate: Coordinate, radius: DistanceMeters) async throws -> [GreenArea] {
@@ -130,6 +133,7 @@ private struct FakeGreenAreaProvider: GreenAreaProvider {
     }
 }
 
+/// In-memory recommendation store that accumulates every saved recommendation.
 private actor FakeRecommendationRepository: RecommendationRepository {
     private var saved: [Recommendation] = []
 
@@ -141,10 +145,10 @@ private actor FakeRecommendationRepository: RecommendationRepository {
         saved.filter { $0.createdAt >= start && $0.createdAt < end }
     }
 
-    // Test helper
     func allSaved() -> [Recommendation] { saved }
 }
 
+/// In-memory notification scheduler that records every scheduled request.
 private actor FakeNotificationScheduler: NotificationScheduler {
     private var scheduled: [NotificationRequest] = []
 
@@ -152,7 +156,6 @@ private actor FakeNotificationScheduler: NotificationScheduler {
         scheduled.append(request)
     }
 
-    // Test helper
     func allScheduled() -> [NotificationRequest] { scheduled }
 }
 

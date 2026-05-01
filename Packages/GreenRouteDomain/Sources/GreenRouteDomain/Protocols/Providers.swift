@@ -1,26 +1,24 @@
-//
-//  Providers.swift
-//  GreenRouteDomain
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
+// Async service contracts for external data sources and device infrastructure.
 
 import Foundation
 
-// MARK: - Green areas (POI search abstraction)
-
+/// Supplies nearby green areas from an external source (e.g. a map API or a local cache).
 public protocol GreenAreaProvider: Sendable {
-    // Returns green areas near the given coordinate within a radius.
+
+    /// Fetches green areas whose centres lie within `radius` of `coordinate`.
     func fetchGreenAreas(
         near coordinate: Coordinate,
         radius: DistanceMeters
     ) async throws -> [GreenArea]
 }
 
-// MARK: - Route calculation (routing engine abstraction)
-
+/// The outcome of a route calculation between two coordinates.
 public struct RouteResult: Sendable, Equatable {
+
+    /// Ordered sequence of coordinates forming the route polyline.
     public let coordinates: [Coordinate]
+
+    /// Estimated travel time along this route in seconds.
     public let expectedTravelTimeSeconds: TimeInterval
 
     public init(coordinates: [Coordinate], expectedTravelTimeSeconds: TimeInterval) {
@@ -29,16 +27,25 @@ public struct RouteResult: Sendable, Equatable {
     }
 }
 
+/// Calculates a walking route between two geographic points.
 public protocol RouteProvider: Sendable {
+
     func calculateRoute(from: Coordinate, to: Coordinate) async throws -> RouteResult
 }
 
-// MARK: - Notifications (abstraction over UNUserNotificationCenter)
-
+/// All data needed to deliver a single scheduled push notification.
 public struct NotificationRequest: Equatable, Hashable, Sendable {
+
+    /// Unique identifier used to cancel or replace this notification later.
     public let id: String
+
+    /// Short headline displayed in the notification banner.
     public let title: String
+
+    /// Secondary text with destination name and walk time estimate.
     public let body: String
+
+    /// When the notification should be delivered. Must be in the future.
     public let fireAt: Date
 
     public init(id: String, title: String, body: String, fireAt: Date) {
@@ -50,6 +57,9 @@ public struct NotificationRequest: Equatable, Hashable, Sendable {
     }
 }
 
+/// Platform-agnostic contract for scheduling a local push notification.
 public protocol NotificationScheduler: Sendable {
+
+    /// Submits the request to the underlying notification system.
     func schedule(_ request: NotificationRequest) async throws
 }
