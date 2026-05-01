@@ -4,11 +4,16 @@
 //
 //  Created by Freja Egelund Grønnemose on 14/04/2026.
 //
+// Root view that bootstraps all feature view models and wires them into the tab bar.
+// Also manages the one-time Motion & Fitness permission prompt shown on first launch.
+
 import SwiftUI
 import GreenRouteDomain
 import GreenRouteData
 import GreenRouteService
 
+/// The root SwiftUI view. Shows a loading state while dependencies are set up,
+/// an error view if setup fails, or the main tab bar when ready
 struct AppCompositionRoot: View {
 
     let service: any GreenRouteService
@@ -17,6 +22,7 @@ struct AppCompositionRoot: View {
     @State private var greenMeetingViewModel: GreenMeetingViewModel?
     @State private var settingsViewModel: SettingsViewModel?
     @State private var bootstrapError: String?
+    /// Flag to ensure the motion permission prompt is shown once (usually on initial launch)
     @AppStorage("motionSheetSeen") private var motionSheetSeen = false
     @State private var showMotionSheet = false
 
@@ -62,9 +68,11 @@ struct AppCompositionRoot: View {
         }
     }
 
+    /// Createes repositories, use cases, and view models.
+    /// Runs once on launch. Sets bootstrapError on failure.
+    @MainActor
     private func bootstrap() async {
         do {
-
             let container = try ModelContainerFactory.makePersistentContainer()
             let recommendationRepository = SwiftDataRecommendationRepository(container: container)
             let inactivityRepository = SwiftDataInactivityEventRepository(container: container)
@@ -105,6 +113,8 @@ struct AppCompositionRoot: View {
     }
 }
 
+/// One-time informational sheet explaining that GreenRoute uses Motion & Fitness data.
+/// Does not request permission directly. Instructs the user to enable it in Settings.
 private struct MotionPermissionPrompt: View {
     @Binding var isPresented: Bool
 

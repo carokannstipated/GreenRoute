@@ -4,11 +4,14 @@
 //
 //  Created by David Rivera on 14/04/2026.
 //
+// Settings tab root and all sub-screens: Permissions, Route Preferences, address picker, and About.
+// Each sub-screen is a private struct so it stays co-located with the navigation structure that owns it.
 
 import SwiftUI
 import MapKit
 import GreenRouteDomain
 
+/// Root settings screen. Provides navigation links to all settings sub-sections.
 struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
 
@@ -52,6 +55,9 @@ struct SettingsView: View {
 }
 
 
+/// Displays the current authorization status for each permission GreenRoute requires.
+/// Tapping a row that is already set opens a system Settings deep-link alert.
+/// Tapping the Motion & Fitness row when "Not Set" triggers the iOS permission prompt directly.
 private struct PermissionsView: View {
     @State private var viewModel = PermissionsViewModel()
     @State private var showingLocationAlert = false
@@ -85,6 +91,8 @@ private struct PermissionsView: View {
                     title: "Motion & Fitness",
                     status: viewModel.motionStatus
                 ) {
+                    // "Not Set" means the user hasn't been prompted yet — request permission inline
+                    // rather than sending them to iOS Settings where nothing would be listed yet.
                     if viewModel.motionStatus == "Not Set" {
                         Task { await viewModel.requestMotionPermission() }
                     } else {
@@ -120,6 +128,8 @@ private struct PermissionsView: View {
         }
     }
 
+    /// Renders a single tappable permission row with a coloured icon, title, and status label.
+    /// Status text is green when the permission is granted and secondary grey otherwise.
     private func permissionRow(icon: String, iconColor: Color, title: String, status: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
@@ -136,6 +146,7 @@ private struct PermissionsView: View {
 }
 
 
+/// Lets the user adjust the max walking route duration and set saved home/work addresses.
 private struct RoutePreferencesView: View {
     var viewModel: SettingsViewModel
 
@@ -203,6 +214,9 @@ private struct RoutePreferencesView: View {
 }
 
 
+/// Full-screen address search that presents MapKit autocomplete suggestions.
+/// Resolves the selected suggestion to a coordinate and calls onSelect before dismissing.
+/// A destructive "Remove Address" button appears at the bottom when a saved address already exists.
 private struct AddressPickerView: View {
     let current: SavedAddress?
     let onSelect: (SavedAddress?) -> Void
@@ -284,6 +298,7 @@ private struct AddressPickerView: View {
 }
 
 
+/// Displays the current app version string read from the main bundle.
 private struct AboutView: View {
     var body: some View {
         Form {
@@ -304,6 +319,7 @@ private struct AboutView: View {
 
 
 private extension View {
+    /// Renders an SF Symbol in a coloured rounded-rectangle badge matching the iOS Settings icon style.
     func settingsIcon(systemName: String, color: Color) -> some View {
         Image(systemName: systemName)
             .font(.body)

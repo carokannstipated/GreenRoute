@@ -4,20 +4,23 @@
 //
 //  Created by Freja Egelund Grønnemose on 17/03/2026.
 //
-
+// Card component displayed when the service determines it's a good time for a green break.
+// Supports swipe-to-dismiss in addition to the explicit buttons.
 
 import SwiftUI
 import GreenRouteDomain
 import GreenRouteService
 
+/// Displays a recommendation for a nearby green area with accept and dismiss actions.
+/// Dragging the card more than 120 pt in either direction triggers a dismiss with a slide-out animation.
 struct RecommendationCard: View {
 
     let recommendation: Recommendation
     let onAccept: () -> Void
     let onDismiss: () -> Void
-    
-    @State private var offset: CGFloat = 0
 
+    /// Current horizontal drag offset, drives the card's position during a swipe gesture.
+    @State private var offset: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -60,29 +63,32 @@ struct RecommendationCard: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
         .offset(x: offset)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            offset = value.translation.width
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    offset = value.translation.width
+                }
+                .onEnded { value in
+                    if abs(value.translation.width) > 120 {
+                        // Swipe was long enough — animate the card off screen, then call dismiss.
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            offset = value.translation.width > 0 ? 500 : -500
                         }
-                        .onEnded { value in
-                            if abs(value.translation.width) > 120 {
-                                withAnimation(.easeOut(duration: 0.3)) {
-                                    offset = value.translation.width > 0 ? 500 : -500
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                    onDismiss()
-                                }
-                            } else {
-                                withAnimation(.spring) {
-                                    offset = 0
-                                }
-                            }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onDismiss()
                         }
-                )
-                .animation(.interactiveSpring, value: offset)
+                    } else {
+                        // Swipe was too short — spring the card back to centre.
+                        withAnimation(.spring) {
+                            offset = 0
+                        }
+                    }
+                }
+        )
+        .animation(.interactiveSpring, value: offset)
     }
 
+    /// Maps the green area kind to an appropriate SF Symbol name.
     private var kindIcon: String {
         switch recommendation.target.kind {
         case .park:          return "tree.fill"
@@ -97,4 +103,3 @@ struct RecommendationCard: View {
 #Preview {
     AppCompositionRoot(service: GreenRouteServiceFactory.make())
 }
-

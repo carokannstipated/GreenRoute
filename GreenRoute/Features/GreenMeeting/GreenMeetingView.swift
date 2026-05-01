@@ -1,9 +1,20 @@
+//
+//  GreenMeetingView.swift
+//  GreenRoute
+//
+// Entry screen for the Green Meeting feature. Lets the user pick a meeting duration
+// with a wheel picker, then searches for a suitable green area and opens the map sheet.
+
 import SwiftUI
 
+/// Presents a duration picker and a "Start Green Meeting" button.
+/// While a session is active, replaces the picker with a session pill at the top of the screen.
 struct GreenMeetingView: View {
 
     @State private var viewModel: GreenMeetingViewModel
+    /// Hours component of the user-selected duration.
     @State private var hours = 0
+    /// Minutes component of the user-selected duration. Defaults to 30 minutes.
     @State private var minutes = 30
 
     init(viewModel: GreenMeetingViewModel) {
@@ -13,17 +24,19 @@ struct GreenMeetingView: View {
     var body: some View {
         ZStack() {
             background
+
             if viewModel.isWalking && !viewModel.isShowingMap {
+                // Active session with the map sheet closed — show the session pill.
                 sessionPill
             } else {
                 VStack(spacing: 24) {
                     Text("Meeting Duration")
                         .font(.largeTitle.bold())
-                    
+
                     picker
-                    
+
                     Spacer().frame(maxHeight: 5)
-                    
+
                     Button {
                         Task { await viewModel.startMeeting(hours: hours, minutes: minutes) }
                     } label: {
@@ -40,6 +53,7 @@ struct GreenMeetingView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
                     .padding(.horizontal)
+                    // Disabled during search or when the user has left duration at zero.
                     .disabled(viewModel.isSearching || (hours == 0 && minutes == 0))
                 }
             }
@@ -69,6 +83,7 @@ struct GreenMeetingView: View {
         }
     }
 
+    /// Side-by-side hour and minute wheel pickers with inline unit labels.
     private var picker: some View {
         HStack(spacing: 0) {
             Text("hrs")
@@ -94,6 +109,8 @@ struct GreenMeetingView: View {
         .padding(.horizontal)
     }
 
+    /// Floating pill shown when a meeting route is active but the map sheet is minimised.
+    /// Tapping the left side reopens the sheet; the X button ends the session.
     private var sessionPill: some View {
         HStack(spacing: 12) {
             Button { viewModel.resumeSession() } label: {
@@ -118,6 +135,7 @@ struct GreenMeetingView: View {
         .transition(.move(edge: .top).combined(with: .opacity))
     }
 
+    /// Subtle green-to-background gradient that fills the screen behind all content.
     private var background: some View {
         LinearGradient(
             colors: [Color.green.opacity(0.08), Color(.systemBackground)],

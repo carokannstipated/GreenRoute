@@ -4,6 +4,8 @@
 //
 //  Created by Freja Egelund Grønnemose on 17/03/2026.
 //
+// Entry point for the GreenRoute app. Wires the SwiftUI lifecycle to UIKit's AppDelegate
+// for background task registration, background fetch handling, and notification delegation.
 
 import SwiftUI
 import BackgroundTasks
@@ -11,6 +13,7 @@ import GreenRouteDomain
 import GreenRouteData
 import GreenRouteService
 
+/// SwiftUI App entry point. Delegates app-lifecycle concerns to AppDelegate via the adaptor.
 @main
 struct GreenRouteApp: App {
 
@@ -23,7 +26,14 @@ struct GreenRouteApp: App {
     }
 }
 
+/// UIApplicationDelegate responsible for:
+/// - Registering and scheduling background refresh tasks.
+/// - Running the inactivity check when the app is refreshed in the background
+/// - Handling foreground notification presentation (banner and sound)
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+
+    /// Shared service instance for the app lifetime. Marked nonisolated(unsafe) to allow access from concurrent contexts.
+    /// Treated as immutable after initialization.
 
     nonisolated(unsafe) let service: any GreenRouteService = GreenRouteServiceFactory.make()
 
@@ -38,6 +48,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         return true
     }
 
+    /// Handles background fetch by running the inactivity check and scheduling a recommendation if needed.
     func application(
         _ application: UIApplication,
         performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
@@ -54,6 +65,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         }
     }
 
+    /// Allows notification banners and sounds to appear even when the app is in the foreground.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -62,6 +74,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         completionHandler([.banner, .sound])
     }
 
+    /// Registers the BGTaskScheduler handler for the inactivity background task identifier.
+    /// Runs the inactivity check flow, handles expiration, and completes the task
     private func registerBackgroundTask() {
         let checker = service.inactivityChecker
         BGTaskScheduler.shared.register(
@@ -78,6 +92,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         }
     }
 
+    /// Submits a BGAppRefreshTaskRequest to fire no earlier than 15 minutes from now
+    /// Called at launch and re-scheduled at the end of every background run.
     private func scheduleBackgroundFetch() {
         let request = BGAppRefreshTaskRequest(identifier: "com.greenroute.inactivity")
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
@@ -85,7 +101,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 }
 
+/// Stateless namespace for the logic executed during both legacy background fetch
+/// and the modern BGTask background refresh.
 private enum BackgroundFetchHandler {
+
+    /// Checks for inactivity, detects recurring break patterns, and schedules a green break
+    /// notification if conditions are met. Re-schedules the next background fetch before returning.
+    /// - Returns: true if a notification was scheduled during this run.
     static func run(service: any GreenRouteService, checker: any InactivityChecking) async -> Bool {
         let now = Date()
         let inactivity = await checker.checkInactivity()
@@ -108,6 +130,7 @@ private enum BackgroundFetchHandler {
             )
             let detectedPattern = try await useCase.execute(now: now, calendar: Calendar.current)
             let latestPattern = try await patternRepo.fetchLatest()
+            // Use the freshly detected pattern if available; fall back to the last stored one.
             let activePattern = detectedPattern ?? latestPattern
 
             let trigger = recommendationTrigger(
@@ -133,6 +156,8 @@ private enum BackgroundFetchHandler {
                     notificationScheduler: service.notificationScheduler
                 )
                 let inactivityThresholdMinutes = 2
+                // If no inactivity event was detected, synthesise one using the threshold window
+                // so the recommendation use case has a valid event to work with.
                 let event = inactivity ?? InactivityEvent(
                     start: now.addingTimeInterval(-TimeInterval(inactivityThresholdMinutes * 60)),
                     end: now
@@ -154,12 +179,15 @@ private enum BackgroundFetchHandler {
             }
         } catch {}
 
+        // Always schedules the next background refresh before returning
         let request = BGAppRefreshTaskRequest(identifier: "com.greenroute.inactivity")
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
         try? BGTaskScheduler.shared.submit(request)
         return didScheduleRecommendation
     }
 
+    /// Determines what triggered the recommendation opportunity: detected inactivity takes precedence
+    /// over a recurring time-of-day pattern.
     private static func recommendationTrigger(
         inactivity: InactivityEvent?,
         pattern: RecurringPattern?,
@@ -174,6 +202,8 @@ private enum BackgroundFetchHandler {
         return pattern.window.contains(minutesFromMidnight: minutesFromMidnight) ? .pattern : nil
     }
 
+    /// Fetches the most recent location visit within the last 7 days.
+    /// Returns nil if no visits are recorded, which prevents recommendations without a valid position.
     private static func latestCoordinate(
         repository: any LocationVisitRepository,
         now: Date
@@ -185,6 +215,7 @@ private enum BackgroundFetchHandler {
         return visits.first?.coordinate
     }
 
+    /// Fetches all recommendations created today (midnight to midnight) to enforce the daily cap.
     private static func recommendationsForToday(
         repository: any RecommendationRepository,
         now: Date,
@@ -195,6 +226,8 @@ private enum BackgroundFetchHandler {
         return try await repository.fetch(from: start, to: end)
     }
 
+    /// Converts the user's max route duration setting into a walking distance limit.
+    /// Assumes 1.4 m/s walking speed over the outbound half of the trip.
     private static func maxDistance(from settings: AppSettings) -> DistanceMeters {
         DistanceMeters(value: Double(settings.maxRouteDurationMinutes) * 60.0 * 1.4 / 2.0)
     }
