@@ -7,9 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9D45EF9D2F6998D300E02F08 /* GreenRouteService in Frameworks */ = {isa = PBXBuildFile; productRef = 9D45EF9C2F6998D300E02F08 /* GreenRouteService */; };
-		9D45EF9F2F6998D700E02F08 /* GreenRouteData in Frameworks */ = {isa = PBXBuildFile; productRef = 9D45EF9E2F6998D700E02F08 /* GreenRouteData */; };
-		9DEE0A2C2FA0C8C100F9A018 /* GreenRouteDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */; };
+		9D1BD8652FA5139000AD0A11 /* GreenRouteData in Frameworks */ = {isa = PBXBuildFile; productRef = 9D1BD8642FA5139000AD0A11 /* GreenRouteData */; };
+		9D1BD8672FA5139400AD0A11 /* GreenRouteDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 9D1BD8662FA5139400AD0A11 /* GreenRouteDomain */; };
+		9D1BD8692FA5139700AD0A11 /* GreenRouteService in Frameworks */ = {isa = PBXBuildFile; productRef = 9D1BD8682FA5139700AD0A11 /* GreenRouteService */; };
+		9D45EF9D2F6998D300E02F08 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		9D45EF9F2F6998D700E02F08 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		9DEE0A2C2FA0C8C100F9A018 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,9 +74,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D45EF9F2F6998D700E02F08 /* GreenRouteData in Frameworks */,
-				9DEE0A2C2FA0C8C100F9A018 /* GreenRouteDomain in Frameworks */,
-				9D45EF9D2F6998D300E02F08 /* GreenRouteService in Frameworks */,
+				9D1BD8692FA5139700AD0A11 /* GreenRouteService in Frameworks */,
+				9D1BD8672FA5139400AD0A11 /* GreenRouteDomain in Frameworks */,
+				9D1BD8652FA5139000AD0A11 /* GreenRouteData in Frameworks */,
+				9D45EF9F2F6998D700E02F08 /* (null) in Frameworks */,
+				9DEE0A2C2FA0C8C100F9A018 /* (null) in Frameworks */,
+				9D45EF9D2F6998D300E02F08 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,9 +148,9 @@
 			);
 			name = GreenRoute;
 			packageProductDependencies = (
-				9D45EF9C2F6998D300E02F08 /* GreenRouteService */,
-				9D45EF9E2F6998D700E02F08 /* GreenRouteData */,
-				9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */,
+				9D1BD8642FA5139000AD0A11 /* GreenRouteData */,
+				9D1BD8662FA5139400AD0A11 /* GreenRouteDomain */,
+				9D1BD8682FA5139700AD0A11 /* GreenRouteService */,
 			);
 			productName = GreenRoute;
 			productReference = 9D8D6EC82F52FA9E00E8FAC5 /* GreenRoute.app */;
@@ -229,7 +235,9 @@
 			mainGroup = 9D8D6EBF2F52FA9E00E8FAC5;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				9DAB34452F56FBB900F049AD /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */,
+				9D1BD8612FA5135700AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */,
+				9D1BD8622FA5136500AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */,
+				9D1BD8632FA5137300AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D8D6EC92F52FA9E00E8FAC5 /* Products */;
@@ -630,11 +638,37 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		9DAB34452F56FBB900F049AD /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */ = {
+		9D1BD8612FA5135700AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GreenRouteData;
+		};
+		9D1BD8622FA5136500AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/GreenRouteDomain;
 		};
+		9D1BD8632FA5137300AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GreenRouteService;
+		};
 /* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9D1BD8642FA5139000AD0A11 /* GreenRouteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D1BD8612FA5135700AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */;
+			productName = GreenRouteData;
+		};
+		9D1BD8662FA5139400AD0A11 /* GreenRouteDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D1BD8622FA5136500AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */;
+			productName = GreenRouteDomain;
+		};
+		9D1BD8682FA5139700AD0A11 /* GreenRouteService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D1BD8632FA5137300AD0A11 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */;
+			productName = GreenRouteService;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9D8D6EC02F52FA9E00E8FAC5 /* Project object */;
 }
