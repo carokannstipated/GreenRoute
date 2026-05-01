@@ -229,9 +229,7 @@
 			mainGroup = 9D8D6EBF2F52FA9E00E8FAC5;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */,
-				9D45EF932F6997B800E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */,
-				9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */,
+				9DAB34452F56FBB900F049AD /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D8D6EC92F52FA9E00E8FAC5 /* Products */;
@@ -632,37 +630,11 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */ = {
+		9DAB34452F56FBB900F049AD /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/GreenRouteDomain;
 		};
-		9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/GreenRouteData;
-		};
-		9D45EF932F6997B800E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/GreenRouteService;
-		};
 /* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		9D45EF9C2F6998D300E02F08 /* GreenRouteService */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9D45EF932F6997B800E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteService" */;
-			productName = GreenRouteService;
-		};
-		9D45EF9E2F6998D700E02F08 /* GreenRouteData */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9D45EF922F6997AB00E02F08 /* XCLocalSwiftPackageReference "Packages/GreenRouteData" */;
-			productName = GreenRouteData;
-		};
-		9DEE0A2B2FA0C8C100F9A018 /* GreenRouteDomain */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9D41E6772FA0C86300359536 /* XCLocalSwiftPackageReference "Packages/GreenRouteDomain" */;
-			productName = GreenRouteDomain;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9D8D6EC02F52FA9E00E8FAC5 /* Project object */;
 }
