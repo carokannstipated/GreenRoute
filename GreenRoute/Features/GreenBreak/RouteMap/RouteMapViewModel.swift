@@ -1,9 +1,3 @@
-//
-//  RouteMapViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
 // View model for the Green Break route map sheet. Fetches the walking route
 // from the user's current position to the recommended green area.
 

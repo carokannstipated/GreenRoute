@@ -1,9 +1,3 @@
-//
-//  GreenRouteApp.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
 // Entry point for the GreenRoute app. Wires the SwiftUI lifecycle to UIKit's AppDelegate
 // for background task registration, background fetch handling, and notification delegation.
 

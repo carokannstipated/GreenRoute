@@ -1,9 +1,3 @@
-//
-//  GreenBreakViewModelTests.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
 // Integration-style tests for GreenBreakViewModel. Uses fake collaborators throughout
 // so tests run without networking, CoreLocation, or CoreMotion.
 

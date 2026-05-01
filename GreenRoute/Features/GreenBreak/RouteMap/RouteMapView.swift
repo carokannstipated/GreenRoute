@@ -1,7 +1,3 @@
-//
-//  RouteMapView.swift
-//  GreenRoute
-//
 // Map sheet for a single green break recommendation. Shows the walking route
 // as a polyline, centres the camera on the full route, and lets the user
 // toggle turn-by-turn navigation mode.

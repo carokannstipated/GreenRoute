@@ -1,9 +1,3 @@
-//
-//  AppCompositionRoot.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 14/04/2026.
-//
 // Root view that bootstraps all feature view models and wires them into the tab bar.
 // Also manages the one-time Motion & Fitness permission prompt shown on first launch.
 

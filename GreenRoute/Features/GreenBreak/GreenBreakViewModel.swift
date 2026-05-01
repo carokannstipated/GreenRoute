@@ -1,10 +1,3 @@
-//
-//  GreenBreakViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//  (Comments added 29/04/2026)
-//
 // Central view model for the Green Break feature. Starts the background service,
 // listens for inactivity and location events, and drives green break recommendations.
 

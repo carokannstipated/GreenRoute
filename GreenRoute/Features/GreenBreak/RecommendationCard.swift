@@ -1,9 +1,3 @@
-//
-//  RecommendationCard.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
 // Card component displayed when the service determines it's a good time for a green break.
 // Supports swipe-to-dismiss in addition to the explicit buttons.
 

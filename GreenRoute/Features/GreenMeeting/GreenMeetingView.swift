@@ -1,7 +1,3 @@
-//
-//  GreenMeetingView.swift
-//  GreenRoute
-//
 // Entry screen for the Green Meeting feature. Lets the user pick a meeting duration
 // with a wheel picker, then searches for a suitable green area and opens the map sheet.
 

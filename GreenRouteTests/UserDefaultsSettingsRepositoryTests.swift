@@ -1,7 +1,3 @@
-//
-//  UserDefaultsSettingsRepositoryTests.swift
-//  GreenRouteTests
-//
 // Verifies that UserDefaultsSettingsRepository correctly persists and retrieves
 // AppSettings values. Each test uses an isolated UserDefaults suite to avoid
 // polluting shared state between runs.

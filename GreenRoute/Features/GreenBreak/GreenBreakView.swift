@@ -1,7 +1,3 @@
-//
-//  GreenBreakView.swift
-//  GreenRoute
-//
 // Main home screen for the Green Break feature. Shows idle state, an active recommendation
 // card, or a "no results" state with controls to retry. Also hosts the route map sheet.
 

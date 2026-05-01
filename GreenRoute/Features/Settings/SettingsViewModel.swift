@@ -1,9 +1,3 @@
-//
-//  SettingsViewModel.swift
-//  GreenRoute
-//
-//  Created by David Rivera on 21/04/2026.
-//
 // View model for the Settings feature. Owns all user-configurable preferences and
 // persists them through a SettingsRepository whenever a value changes.
 

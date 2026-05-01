@@ -1,9 +1,3 @@
-//
-//  AddressSearchViewModel.swift
-//  GreenRoute
-//
-//  Created by David Rivera on 22/04/2026.
-//
 // View model for the address search picker. Wraps MKLocalSearchCompleter to provide
 // live autocomplete suggestions and resolves a chosen suggestion into a SavedAddress with coordinates.
 

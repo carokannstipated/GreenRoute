@@ -1,9 +1,3 @@
-//
-//  GreenMeetingMapView.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 14/04/2026.
-//
 // Map sheet for the Green Meeting feature. Shows a circular route (origin → green area → origin)
 // with outbound and return legs drawn in distinct green shades.
 

@@ -1,9 +1,3 @@
-//
-//  FakeGreenRouteService.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 17/03/2026.
-//
 // Test doubles for the GreenRouteService protocol and its collaborator protocols.
 // Each fake is minimal: it records calls, exposes stubs, and avoids real networking or I/O.
 

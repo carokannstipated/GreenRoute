@@ -1,9 +1,3 @@
-//
-//  GreenMeetingMapViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 14/04/2026.
-//
 // View model for the Green Meeting map sheet. Calculates both legs of a circular
 // walk (origin → green area, green area → origin) and aggregates their travel times.
 

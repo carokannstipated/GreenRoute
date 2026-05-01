@@ -1,9 +1,3 @@
-//
-//  GreenMeetingViewModel.swift
-//  GreenRoute
-//
-//  Created by Freja Egelund Grønnemose on 14/04/2026.
-//
 // View model for the Green Meeting feature. Given a desired meeting duration,
 // it finds a nearby green area that fits the available walking time and exposes
 // it for the map sheet to display.

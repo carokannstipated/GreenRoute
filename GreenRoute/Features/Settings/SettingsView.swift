@@ -1,9 +1,3 @@
-//
-//  SettingsView.swift
-//  GreenRoute
-//
-//  Created by David Rivera on 14/04/2026.
-//
 // Settings tab root and all sub-screens: Permissions, Route Preferences, address picker, and About.
 // Each sub-screen is a private struct so it stays co-located with the navigation structure that owns it.
 

@@ -1,10 +1,3 @@
-//
-//  GreenRouteUITestsLaunchTests.swift
-//  GreenRouteUITests
-//
-//  Created by Freja Egelund Grønnemose on 28/02/2026.
-//
-
 import XCTest
 
 final class GreenRouteUITestsLaunchTests: XCTestCase {

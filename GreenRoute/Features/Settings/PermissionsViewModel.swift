@@ -1,9 +1,3 @@
-//
-//  PermissionsViewModel.swift
-//  GreenRoute
-//
-//  Created by David Rivera on 22/04/2026.
-//
 // View model for the Permissions screen. Reads system authorization statuses for
 // location, notifications, and motion, and exposes them as human-readable strings.
 
